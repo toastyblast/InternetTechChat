@@ -3,10 +3,6 @@ package com.company;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class ClientOpening {
     public static final String SERVER_ADDRESS = "localhost";
@@ -28,11 +24,11 @@ public class ClientOpening {
             //Keep looping until you are actually connected to the server.
 
             boolean logged = false;
-            while (!logged){
+            while (!logged) {
                 try {
                     System.out.println(singleton.getBufferedReader().readLine()); // Show welcoming message.
                     logged = true;
-                } catch (SocketTimeoutException ste){
+                } catch (SocketTimeoutException ste) {
                     //If the server doesn't send a connection confirmation message for 10s exception will be thrown
                     //and the client will try to reconnect again.
                     System.out.println("Could not connect");
@@ -54,16 +50,12 @@ public class ClientOpening {
             connect.start();
 
             while (singleton.isContinueToChat()) {
-
                 serverHandler.sendMessage();
-
             }
-
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     //Other methods...

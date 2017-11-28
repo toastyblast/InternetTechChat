@@ -2,7 +2,6 @@ package com.company;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 
 public class Singleton {
     private static Singleton ourInstance = new Singleton();
@@ -20,6 +19,7 @@ public class Singleton {
     }
 
     private Singleton() {
+        //Constructor is not needed.
     }
 
     public Socket getSocket() {

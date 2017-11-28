@@ -20,25 +20,18 @@ public class ListeningThread implements Runnable {
     @Override
     public void run() {
         while (true) {
-
-
             String serverMessage = null;
 
-
             try {
-
                 serverMessage = singleton.getBufferedReader().readLine();
-
             } catch (SocketTimeoutException ignored) {
                 //If a message is not received for 10 seconds this means that there is no connection.
                 //When that happens a new socket will be created and the user will be logged again with his username.
-
                 System.out.println("Connection was lost. But you are now reconnected again.");
-                try {
 
+                try {
                     //Create the new socket.
                     singleton.setSocket(new Socket(ClientOpening.SERVER_ADDRESS, ClientOpening.SERVER_PORT));
-
                     //Log in the user.
                     PrintWriter writer = new PrintWriter(singleton.getOutputStream());
                     writer.println("HELO " + singleton.getUserName());
@@ -51,13 +44,11 @@ public class ListeningThread implements Runnable {
                 e.printStackTrace();
             }
 
-
             if (serverMessage != null) {
 
                 if (serverMessage.contains("BCST")) { //If it is a normal message display it to the user.
                     //When a normal message is recieved it will be shown to the client along with the time that it was
                     //send at.
-
                     if (serverMessage.contains("TEST_CONNECTION")) {
                         //This message is only for testing the connection, so when the user receives it do not do
                         //anything with it.
@@ -87,8 +78,6 @@ public class ListeningThread implements Runnable {
                     System.out.println("Your message was corrupt:");
                 }
             }
-
-
         }
     }
 }

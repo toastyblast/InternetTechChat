@@ -1,6 +1,5 @@
 package com.company;
 
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
@@ -9,17 +8,17 @@ public class ServerHandler extends Thread {
     private Singleton singleton = Singleton.getInstance();
 
     public ServerHandler() {
-
+        //Nothing, a constructor is not needed.
     }
 
     /**
      * Method for sending message to the user.
      */
     public void sendMessage() {
-
         Scanner reader = new Scanner(System.in);
         String userInput = reader.nextLine();
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
+
         //If the user types "quit", quit him out.
         if (userInput.equalsIgnoreCase("quit")) {
             quit();
@@ -36,14 +35,17 @@ public class ServerHandler extends Thread {
      */
     public void login() {
         Scanner reader = new Scanner(System.in);
+
         System.out.println("Please enter a username: ");
         String userInput = reader.next();
         userName = userInput;
         //Store the username for when you need to reconnect.
         singleton.setUserName(userName);
+
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
         writer.println("HELO " + userInput);
-//        writer.println("BCST " + userInput + " USER_ENTERED_CHAT");
+        writer.println("BCST entered the chat. Say hi!");
+
         writer.flush();
     }
 
@@ -52,8 +54,9 @@ public class ServerHandler extends Thread {
      */
     public void quit() {
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
-//        writer.println("BCST " + userName + " USER_EXITED_CHAT");
+        writer.println("BCST has left the chat.");
         writer.println("QUIT");
+
         writer.flush();
     }
 
