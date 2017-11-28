@@ -31,7 +31,7 @@ public class ClientOpening {
                 } catch (SocketTimeoutException ste) {
                     //If the server doesn't send a connection confirmation message for 10s exception will be thrown
                     //and the client will try to reconnect again.
-                    System.out.println("Could not connect");
+                    System.out.println("Could not connect. Trying to reconnect.");
                     singleton.setSocket(new Socket(SERVER_ADDRESS, SERVER_PORT));
                 }
             }
@@ -39,7 +39,7 @@ public class ClientOpening {
             //Ask the user for username.
             serverHandler.login();
 
-            System.out.println("Successfully logged in. \n" + "You can now chat.");
+            System.out.println("Successfully logged in. \n" + "You can now type a message and press enter to chat.");
 
             //Create the thread that listens for messages from the server.
             listen = new Thread(new ListeningThread());

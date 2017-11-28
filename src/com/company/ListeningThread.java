@@ -25,7 +25,7 @@ public class ListeningThread implements Runnable {
             } catch (SocketTimeoutException ignored) {
                 //If a message is not received for 10 seconds this means that there is no connection.
                 //When that happens a new socket will be created and the user will be logged again with his username.
-                System.out.println("Connection was lost. But you are now reconnected again.");
+                System.out.println("Connection was lost...");
 
                 try {
                     //Create the new socket.
@@ -45,7 +45,7 @@ public class ListeningThread implements Runnable {
             if (serverMessage != null) {
 
                 if (serverMessage.contains("BCST")) { //If it is a normal message display it to the user.
-                    //When a normal message is recieved it will be shown to the client along with the time that it was
+                    //When a normal message is received it will be shown to the client along with the time that it was
                     //send at.
                     if (serverMessage.contains("TEST_CONNECTION")) {
                         //This message is only for testing the connection, so when the user receives it do not do
@@ -64,12 +64,14 @@ public class ListeningThread implements Runnable {
                     singleton.setContinueToChat(false);
 
                     break;
-                } else if (serverMessage.contains("-ERR") || serverMessage.contains("+OK") || serverMessage.contains("HELO")) {
+                } else if (serverMessage.contains("-ERR") || serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                     //Do nothing.
+                } else if (serverMessage.contains("+OK " + singleton.getUserName())) {
+                    System.out.println(singleton.getUserName() + ", you have been reconnected.");
                 } else {
                     //If a message from unknown type has been received this means it was corrupted.
                     //The program prints it to the user so he knows that the message was not sent.
-                    System.out.println("Your message was corrupt:");
+                    System.out.println("Your message was corrupt." /*TODO: + " Trying to resend it..."*/);
                 }
             }
         }
