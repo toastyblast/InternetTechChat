@@ -8,13 +8,11 @@ import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-
 public class ListeningThread implements Runnable {
-
     private Singleton singleton = Singleton.getInstance();
 
     public ListeningThread() {
-
+        //Constructor is not needed.
     }
 
     @Override
@@ -62,15 +60,11 @@ public class ListeningThread implements Runnable {
                 } else if (serverMessage.equals("+OK Goodbye")) { // If this is the final message stop the timer.
                     //This message is received when the user types "quit".
                     //When the message is received the thread is stopped from listening.
-
                     System.out.println(serverMessage);
                     singleton.setContinueToChat(false);
+
                     break;
-                } else if (serverMessage.contains("-ERR")) {
-                    //Do nothing.
-                } else if (serverMessage.contains("+OK")) {
-                    //Do nothing.
-                } else if (serverMessage.contains("HELO")) {
+                } else if (serverMessage.contains("-ERR") || serverMessage.contains("+OK") || serverMessage.contains("HELO")) {
                     //Do nothing.
                 } else {
                     //If a message from unknown type has been received this means it was corrupted.
