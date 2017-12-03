@@ -1,5 +1,6 @@
 package com.company;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
@@ -14,17 +15,20 @@ public class ServerHandler extends Thread {
     /**
      * Method for sending message to the user.
      */
-    public void sendMessage() {
+    public void sendMessage() throws IOException {
+        singleton.getOutputStream().write("BCST ".getBytes());
+
         Scanner reader = new Scanner(System.in);
         String userInput = reader.nextLine();
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
 
         //If the user types "quit", quit him out.
         if (userInput.equalsIgnoreCase("quit")) {
+            singleton.getOutputStream().flush();
             quit();
         } else {
             //If it is a normal message, just send it.
-            writer.println("BCST " + userInput);
+            writer.println(userInput);
             writer.flush();
             singleton.setLastMessage(userInput);
         }
@@ -52,9 +56,9 @@ public class ServerHandler extends Thread {
     /**
      * Method for quiting the server.
      */
-    public void quit() {
+    private void quit() {
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
-        writer.println("BCST has left the chat.");
+        writer.println("has left the chat.");
         writer.println("QUIT");
 
         writer.flush();

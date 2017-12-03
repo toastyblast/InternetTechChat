@@ -14,6 +14,8 @@ public class Singleton {
     private String userName;
     private String lastMessage;
 
+    public static final String SERVER_ADDRESS = "localhost";
+    public static final int SERVER_PORT = 1337;
     public static Singleton getInstance() {
         return ourInstance;
     }
@@ -26,11 +28,11 @@ public class Singleton {
         return socket;
     }
 
-    public void setSocket(Socket socket) {
-        this.socket = socket;
+    public void setSocket() throws IOException {
+        this.socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
 
         try {
-            socket.setSoTimeout(10000);
+            socket.setSoTimeout(200);
             this.outputStream = this.socket.getOutputStream();
             this.inputStream = this.socket.getInputStream();
             this.bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
@@ -48,12 +50,6 @@ public class Singleton {
     }
 
     public OutputStream getOutputStream() {
-        OutputStream outputStream = null;
-        try {
-            outputStream = this.socket.getOutputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         return outputStream;
     }
 
@@ -79,5 +75,20 @@ public class Singleton {
 
     public String getLastMessage() {
         return lastMessage;
+    }
+
+    public void reconnect(){
+        try {
+            setSocket();
+            PrintWriter writer = new PrintWriter(this.outputStream);
+
+            writer.println("HELO " + this.userName);
+            writer.flush();
+
+            System.out.println("You have been reconnected.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Scanner;
 
 public class ListeningThread implements Runnable {
     private Singleton singleton = Singleton.getInstance();
@@ -23,21 +24,7 @@ public class ListeningThread implements Runnable {
             try {
                 serverMessage = singleton.getBufferedReader().readLine();
             } catch (SocketTimeoutException ignored) {
-                //If a message is not received for 10 seconds this means that there is no connection.
-                //When that happens a new socket will be created and the user will be logged again with his username.
-                System.out.println("Connection was lost...");
 
-                try {
-                    //Create the new socket.
-                    singleton.setSocket(new Socket(ClientOpening.SERVER_ADDRESS, ClientOpening.SERVER_PORT));
-                    //Log in the user.
-                    PrintWriter writer = new PrintWriter(singleton.getOutputStream());
-                    writer.println("HELO " + singleton.getUserName());
-                    writer.flush();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -62,7 +49,6 @@ public class ListeningThread implements Runnable {
                     //When the message is received the thread is stopped from listening.
                     System.out.println(serverMessage);
                     singleton.setContinueToChat(false);
-
                     break;
                 } else if (serverMessage.contains("-ERR") || serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                     //Do nothing.
@@ -71,9 +57,17 @@ public class ListeningThread implements Runnable {
                 } else {
                     //If a message from unknown type has been received this means it was corrupted.
                     //The program prints it to the user so he knows that the message was not sent.
-                    System.out.println("Your message was corrupt." /*TODO: + " Trying to resend it..."*/);
+                    System.out.println("The message you received was corrupted.");
                 }
             }
         }
     }
+
+    private void sendMessage(String message){
+        PrintWriter writer = new PrintWriter(singleton.getOutputStream());
+        writer.println(message);
+        writer.flush();
+        singleton.setLastMessage(message);
+    }
+
 }
