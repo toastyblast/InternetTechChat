@@ -172,7 +172,6 @@ public class Server {
                                 //The user is trying to whisper to another user.
                                 ArrayList<String> myList = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
                                 //Grab the username after the "/whisper " part. Whisper is words[0], the username is words[1].
-                                System.out.println(myList);
                                 String userToWhisper = myList.get(1);
 
                                 boolean userExists = false;
