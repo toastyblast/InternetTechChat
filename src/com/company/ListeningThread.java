@@ -31,13 +31,18 @@ public class ListeningThread implements Runnable {
 
             if (serverMessage != null) {
 
-                if (serverMessage.contains("BCST")) { //If it is a normal message display it to the user.
+                if (serverMessage.contains("BCST") || serverMessage.contains("WSPR")) { //If it is a normal message display it to the user.
                     //When a normal message is received it will be shown to the client along with the time that it was
                     //send at.
                     //PURELY COSMETIC CODE.
                     DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss"); //Get the current time.
                     LocalDateTime now = LocalDateTime.now();
-                    System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("BCST", ""));
+
+                    if (serverMessage.contains("WSPR")) {
+                        System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("WSPR", "[WHISPER]"));
+                    } else {
+                        System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("BCST", "[GLOBAL]"));
+                    }
                     //PURELY COSMETIC CODE.
                 } else if (serverMessage.equals("+OK Goodbye")) { // If this is the final message stop the timer.
                     //This message is received when the user types "quit".
@@ -45,7 +50,9 @@ public class ListeningThread implements Runnable {
                     System.out.println(serverMessage);
                     singleton.setContinueToChat(false);
                     break;
-                } else if (serverMessage.contains("-ERR") || serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
+                } else if (serverMessage.contains("-ERR")) {
+                    System.out.println(serverMessage);
+                } else if (serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                     //Do nothing.
                 } else {
                     //If a message from unknown type has been received this means it was corrupted.

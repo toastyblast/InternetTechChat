@@ -31,6 +31,13 @@ public class ServerHandler extends Thread {
         if (userInput.equalsIgnoreCase("quit")) {
             singleton.getOutputStream().flush();
             quit();
+        } else if (userInput.toLowerCase().startsWith("/whisper")) {
+            singleton.getOutputStream().write("WSPR ".getBytes());
+            writer.println(userInput);
+            writer.flush();
+
+            singleton.setMessageSent(true);
+            singleton.setLastMessage(userInput);
         } else {
             //If it is a normal message, just send it.
             singleton.getOutputStream().write("BCST ".getBytes());
@@ -56,7 +63,7 @@ public class ServerHandler extends Thread {
 
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
         writer.println("HELO " + userInput);
-        writer.println("BCST entered the chat. Say hi!");
+        writer.println("BCST has entered WhatsUpp. Say hi!");
 
         writer.flush();
     }

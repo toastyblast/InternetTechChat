@@ -6,7 +6,8 @@ public class Message {
         BCST,
         QUIT,
         TEST,
-        UNKOWN
+        UNKOWN,
+        WSPR
     }
 
     private String line;

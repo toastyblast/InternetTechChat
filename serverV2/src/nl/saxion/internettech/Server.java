@@ -3,9 +3,7 @@ package nl.saxion.internettech;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import static nl.saxion.internettech.ServerState.*;
 
@@ -154,7 +152,7 @@ public class Server {
                                 // Broadcast to other clients.
                                 for (ClientThread ct : threads) {
                                     if (ct != this) {
-                                        ct.writeToClient("BCST [" + getUsername() + "] " + message.getPayload());
+                                        ct.writeToClient("BCST - " + getUsername() + ": " + message.getPayload());
                                     }
                                 }
                                 writeToClient("+OK");
@@ -169,6 +167,44 @@ public class Server {
                             case UNKOWN:
                                 // Unkown command has been sent
                                 writeToClient("-ERR Unkown command");
+                                break;
+                            case WSPR:
+                                //The user is trying to whisper to another user.
+                                ArrayList<String> myList = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
+                                //Grab the username after the "/whisper " part. Whisper is words[0], the username is words[1].
+                                System.out.println(myList);
+                                String userToWhisper = myList.get(1);
+
+                                boolean userExists = false;
+                                ClientThread threadToMessage = null;
+
+                                for (ClientThread ct : threads) {
+                                    //Check if the user isn't trying to message themselves or someone who doesn't exist.
+                                    if (ct != this && ct.getUsername().equalsIgnoreCase(userToWhisper)) {
+                                        userExists = true;
+                                        threadToMessage = ct;
+                                        break;
+                                    }
+                                }
+
+                                if (userExists) {
+                                    //Remove the /whisper and then the <username> parts of the message.
+                                    myList.remove(0);
+                                    myList.remove(0);
+
+                                    StringBuilder sb = new StringBuilder();
+                                    for (String s : myList) {
+                                        sb.append(s);
+                                        sb.append(" ");
+                                    }
+
+                                    threadToMessage.writeToClient("WSPR - " + getUsername() + " whispers: " + sb.toString());
+
+                                    writeToClient("+OK");
+                                } else {
+                                    writeToClient("-ERR User you tried to whisper to does not exist (or it's you yourself).");
+                                }
+
                                 break;
                         }
                     }
