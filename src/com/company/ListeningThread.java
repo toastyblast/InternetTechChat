@@ -75,7 +75,9 @@ public class ListeningThread implements Runnable {
                     System.out.println(serverMessage);
                 } else if (serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                     //Do nothing.
-                } else {
+                } else if (serverMessage.contains("+GRP")){
+                    System.out.println(serverMessage);
+                }else {
                     //If a message from unknown type has been received this means it was corrupted.
                     //The program prints it to the user so he knows that the message was not sent.
                     if (singleton.isMessageSent()){

@@ -47,6 +47,10 @@ public class ServerHandler extends Thread {
 
             singleton.setMessageSent(true);
             singleton.setLastMessage(userInput);
+        } else if (userInput.toLowerCase().startsWith("/grp")){
+            singleton.getOutputStream().write("GRP ".getBytes());
+            writer.println(userInput);
+            writer.flush();
         } else {
             //If it is a normal message, just send it.
             singleton.getOutputStream().write("BCST ".getBytes());

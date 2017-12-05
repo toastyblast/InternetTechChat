@@ -12,7 +12,7 @@ public class Server {
     private ServerSocket serverSocket;
     private Set<ClientThread> threads;
     private ServerConfiguration conf;
-
+    private ArrayList<Group> groups = new ArrayList<>();
 
     public Server(ServerConfiguration conf) {
         this.conf = conf;
@@ -227,6 +227,46 @@ public class Server {
                                 writeToClient(sb.toString());
 
                                 break;
+                            case GRP:
+                                ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
+                                String command = commandStringGRP.get(1);
+
+
+                                if (command.equals("create")){
+                                    String groupName = commandStringGRP.get(2);
+                                    if (groupExists(groupName)){
+                                        writeToClient("-ERR Group name is already in use.");
+                                    } else if (!groupExists(groupName)){
+                                        groups.add(new Group(groupName, getUsername()));
+                                        Group lastGroup = groups.get(groups.size()-1);
+                                        writeToClient("+GRP Group created. " + lastGroup.getGroupName() + " "
+                                                + lastGroup.getOwner());
+                                    }
+                                } else if (command.equals("join")){
+                                    String groupName = commandStringGRP.get(2);
+                                    System.out.println(groupName);
+                                    if (groupExists(groupName)){
+                                        writeToClient("+GRP " + findGroup(groupName).join(getUsername()));
+                                    } else {
+                                        writeToClient("-ERR Group that you are trying to join does not exist.");
+                                    }
+                                } else if (command.equals("allgroups")){
+                                    writeToClient("+GRP " + groups);
+                                } else if (command.equals("leave")){
+                                    String groupName = commandStringGRP.get(2);
+                                    if (groupExists(groupName)){
+                                        writeToClient("+GRP " + findGroup(groupName).leave(getUsername()));
+                                    } else {
+                                        writeToClient("-ERR Group that you are trying to leave does not exist.");
+                                    }
+                                } else if (command.equals("kick")){
+                                    String groupName = commandStringGRP.get(2);
+                                    String memberToKick = commandStringGRP.get(3);
+                                    if (groupExists(groupName)){
+                                        writeToClient("+GRP " + findGroup(groupName).kickMember(getUsername(), memberToKick));
+                                    }
+                                }
+                                break;
                         }
                     }
                 }
@@ -236,6 +276,26 @@ public class Server {
             } catch (IOException e) {
                 System.out.println("Server Exception: " + e.getMessage());
             }
+        }
+
+
+        private boolean groupExists(String groupName){
+            if (groups.size() > 0) {
+                for (int i = 0; i < groups.size(); i++) {
+                    if (groupName.equals(groups.get(i).getGroupName())) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        private Group findGroup(String groupName){
+            for (int i = 0; i < groups.size(); i++) {
+                if (groupName.equals(groups.get(i).getGroupName())){
+                    return groups.get(i);
+                }
+            }
+            return null;
         }
 
         /**

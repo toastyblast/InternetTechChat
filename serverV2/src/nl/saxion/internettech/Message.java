@@ -8,7 +8,8 @@ public class Message {
         TEST,
         UNKOWN,
         WSPR,
-        USRS
+        USRS,
+        GRP
     }
 
     private String line;
