@@ -16,11 +16,16 @@ public class ServerHandler extends Thread {
      * Method for sending message to the user.
      */
     public void sendMessage() throws IOException {
-        singleton.getOutputStream().write("BCST ".getBytes());
+        PrintWriter writer = new PrintWriter(singleton.getOutputStream());
+
+        //Writing to the server before every message to check if the connection is OK.
+        //If this line throws an exception this means the socket is closed.
+        singleton.getOutputStream().write("TEST ".getBytes());
+        writer.println();
+        writer.flush();
 
         Scanner reader = new Scanner(System.in);
         String userInput = reader.nextLine();
-        PrintWriter writer = new PrintWriter(singleton.getOutputStream());
 
         //If the user types "quit", quit him out.
         if (userInput.equalsIgnoreCase("quit")) {
@@ -28,8 +33,11 @@ public class ServerHandler extends Thread {
             quit();
         } else {
             //If it is a normal message, just send it.
+            singleton.getOutputStream().write("BCST ".getBytes());
             writer.println(userInput);
             writer.flush();
+
+            singleton.setMessageSent(true);
             singleton.setLastMessage(userInput);
         }
     }

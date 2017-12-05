@@ -13,6 +13,7 @@ public class Singleton {
     private boolean continueToChat = true;
     private String userName;
     private String lastMessage;
+    private boolean messageSent;
 
     public static final String SERVER_ADDRESS = "localhost";
     public static final int SERVER_PORT = 1337;
@@ -75,6 +76,14 @@ public class Singleton {
 
     public String getLastMessage() {
         return lastMessage;
+    }
+
+    public boolean isMessageSent() {
+        return messageSent;
+    }
+
+    public void setMessageSent(boolean messageSent) {
+        this.messageSent = messageSent;
     }
 
     public void reconnect(){

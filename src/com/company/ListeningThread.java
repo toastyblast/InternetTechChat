@@ -34,16 +34,11 @@ public class ListeningThread implements Runnable {
                 if (serverMessage.contains("BCST")) { //If it is a normal message display it to the user.
                     //When a normal message is received it will be shown to the client along with the time that it was
                     //send at.
-                    if (serverMessage.contains("TEST_CONNECTION")) {
-                        //This message is only for testing the connection, so when the user receives it do not do
-                        //anything with it.
-                    } else {
-                        //PURELY COSMETIC CODE.
-                        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss"); //Get the current time.
-                        LocalDateTime now = LocalDateTime.now();
-                        System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("BCST", ""));
-                        //PURELY COSMETIC CODE.
-                    }
+                    //PURELY COSMETIC CODE.
+                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss"); //Get the current time.
+                    LocalDateTime now = LocalDateTime.now();
+                    System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("BCST", ""));
+                    //PURELY COSMETIC CODE.
                 } else if (serverMessage.equals("+OK Goodbye")) { // If this is the final message stop the timer.
                     //This message is received when the user types "quit".
                     //When the message is received the thread is stopped from listening.
@@ -52,12 +47,15 @@ public class ListeningThread implements Runnable {
                     break;
                 } else if (serverMessage.contains("-ERR") || serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                     //Do nothing.
-                } else if (serverMessage.contains("+OK " + singleton.getUserName())) {
-                    System.out.println(singleton.getUserName() + ", you have been reconnected.");
                 } else {
                     //If a message from unknown type has been received this means it was corrupted.
                     //The program prints it to the user so he knows that the message was not sent.
-                    System.out.println("The message you received was corrupted.");
+                    if (singleton.isMessageSent()){
+                        System.out.println("Your message was corrupted. " + singleton.getLastMessage());
+                        singleton.setMessageSent(false);
+                    } else if (!singleton.isMessageSent()) {
+                        System.out.println("You received a corrupted message. " + serverMessage);
+                    }
                 }
             }
         }
