@@ -205,6 +205,28 @@ public class Server {
                                 }
 
                                 break;
+                            case USRS:
+//                                ArrayList<String> commandString = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
+//
+//                                if (commandString.size() > 1) {
+//                                    //TODO - IDEA: This means the user wants to get a list of users in a specific group.
+//                                    String groupToGetUsersOf = commandString.get(1);
+//                                } else {
+//                                    //Return the list of all users online on the complete system.
+//                                }
+
+                                StringBuilder sb = new StringBuilder();
+                                //Change the part after the dash to the name of the group this is a list of users of.
+                                sb.append("USRS,GLOBAL");
+
+                                for (ClientThread ct : threads) {
+                                    sb.append(",");
+                                    sb.append(ct.getUsername());
+                                }
+
+                                writeToClient(sb.toString());
+
+                                break;
                         }
                     }
                 }

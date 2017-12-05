@@ -38,6 +38,15 @@ public class ServerHandler extends Thread {
 
             singleton.setMessageSent(true);
             singleton.setLastMessage(userInput);
+        } else if (userInput.toLowerCase().startsWith("/users")) {
+            //TODO - IDEA: Let the user either add the name of a group ("/users" returns GLOBAL, "/users chat1" returns CHAT1) OR
+            //TODO: Only let them return the list of the group they are currently in, if they type "/users", ignoring any input after it and adding their current group's name to the output here at the backend.
+            singleton.getOutputStream().write("USRS ".getBytes());
+            writer.println(userInput);
+            writer.flush();
+
+            singleton.setMessageSent(true);
+            singleton.setLastMessage(userInput);
         } else {
             //If it is a normal message, just send it.
             singleton.getOutputStream().write("BCST ".getBytes());

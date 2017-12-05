@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 public class ListeningThread implements Runnable {
@@ -44,7 +46,26 @@ public class ListeningThread implements Runnable {
                         System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("BCST", "[GLOBAL]"));
                     }
                     //PURELY COSMETIC CODE.
-                } else if (serverMessage.equals("+OK Goodbye")) { // If this is the final message stop the timer.
+                } else if (serverMessage.contains("USRS")) {
+                    //Get an arrayList of names from the string.
+                    ArrayList<String> listOfUsers = new ArrayList<>(Arrays.asList(serverMessage.split(",")));
+                    //The message first starts with "USRS", then "," and then "<group>". We need to get that group.
+                    String messageGroup = listOfUsers.get(1);
+                    //Remove the USRS and <group> items from the arrayList.
+                    listOfUsers.remove(0);
+                    listOfUsers.remove(0);
+
+                    StringBuilder sb = new StringBuilder();
+
+                    for (String name : listOfUsers) {
+                        sb.append("\n - ");
+                        sb.append(name);
+                    }
+
+                    //Change the part after the - and IN to the name of the actual group this is a list of users of.
+                    System.out.println("~-= List of the users in chat group [" + messageGroup + "] =-~" + sb.toString());
+                }
+                else if (serverMessage.equals("+OK Goodbye")) { // If this is the final message stop the timer.
                     //This message is received when the user types "quit".
                     //When the message is received the thread is stopped from listening.
                     System.out.println(serverMessage);

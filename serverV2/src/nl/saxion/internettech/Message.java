@@ -7,7 +7,8 @@ public class Message {
         QUIT,
         TEST,
         UNKOWN,
-        WSPR
+        WSPR,
+        USRS
     }
 
     private String line;
