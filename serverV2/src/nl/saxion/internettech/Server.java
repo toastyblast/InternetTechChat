@@ -230,7 +230,7 @@ public class Server {
                             case GRP:
                                 ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
                                 String command = commandStringGRP.get(1);
-
+                                System.out.println(command);
 
                                 if (command.equals("create")){
                                     String groupName = commandStringGRP.get(2);
@@ -265,6 +265,45 @@ public class Server {
                                     if (groupExists(groupName)){
                                         writeToClient("+GRP " + findGroup(groupName).kickMember(getUsername(), memberToKick));
                                     }
+                                } else if (command.equals("msg")){
+                                    String groupName = commandStringGRP.get(2);
+                                    System.out.println(groupName);
+                                    if (groupExists(groupName)){
+
+                                        Group group = findGroup(groupName);
+                                        if (group.exists(getUsername())) {
+
+                                            List<String> messageStrings = commandStringGRP.subList(3, commandStringGRP.size());
+                                            StringBuilder fullMessage = new StringBuilder();
+                                            for (String msg : messageStrings) {
+                                                fullMessage.append(msg).append(" ");
+                                            }
+
+                                            ArrayList<ClientThread> clientThreadArrayList = new ArrayList<>(threads);
+                                            ArrayList<String> groupMembers = group.getMembers();
+                                            ArrayList<ClientThread> groupMembersThreads = new ArrayList<>();
+
+                                            for (int i = 0; i < groupMembers.size(); i++) {
+                                                if (!groupMembers.get(i).equals(getUsername())) {
+                                                    for (int j = 0; j < clientThreadArrayList.size(); j++) {
+                                                        if (groupMembers.get(i).equals(clientThreadArrayList.get(j).getUsername())) {
+                                                            groupMembersThreads.add(clientThreadArrayList.get(j));
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            for (ClientThread ct : groupMembersThreads) {
+                                                if (ct != this) {
+                                                    ct.writeToClient("GRPMSG - " + groupName + " " + getUsername() + ": " + fullMessage);
+                                                }
+                                            }
+                                        } else {
+                                            writeToClient("-ERR You are not a member of this group.");
+                                        }
+                                    } else {
+                                        writeToClient("-ERR Group doesn't exist.");
+                                    }
                                 }
                                 break;
                         }
@@ -277,7 +316,6 @@ public class Server {
                 System.out.println("Server Exception: " + e.getMessage());
             }
         }
-
 
         private boolean groupExists(String groupName){
             if (groups.size() > 0) {

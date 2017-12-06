@@ -58,7 +58,7 @@ public class Group {
         return "You have no permissions to kick.";
     }
 
-    private boolean exists(String username) {
+    public boolean exists(String username) {
         if (members.size() > 0) {
             for (String member : members) {
                 if (username.equals(member)) {

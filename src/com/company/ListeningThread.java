@@ -77,7 +77,10 @@ public class ListeningThread implements Runnable {
                     //Do nothing.
                 } else if (serverMessage.contains("+GRP")){
                     System.out.println(serverMessage);
-                }else {
+                } else if (serverMessage.contains("GRPMSG")){
+                    System.out.println(serverMessage);
+                }
+                else {
                     //If a message from unknown type has been received this means it was corrupted.
                     //The program prints it to the user so he knows that the message was not sent.
                     if (singleton.isMessageSent()){
