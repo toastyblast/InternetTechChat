@@ -4,17 +4,17 @@ import java.util.ArrayList;
 
 public class Group {
 
-    private String owner;
+    private ClientThreadPC owner;
     private String groupName;
-    private ArrayList<String> members = new ArrayList<>();
+    private ArrayList<ClientThreadPC> members = new ArrayList<>();
 
-    public Group(String groupName, String owner) {
+    public Group(String groupName, ClientThreadPC owner) {
         this.groupName = groupName;
         this.owner = owner;
         members.add(owner);
     }
 
-    public void addMember(String owner, String username) {
+    public void addMember(ClientThreadPC owner, ClientThreadPC username) {
         if (owner.equals(this.owner)) {
             if (!exists(username)) {
                 members.add(username);
@@ -22,18 +22,18 @@ public class Group {
         }
     }
 
-    public String join(String username) {
-        if (!exists(username)) {
-            members.add(username);
+    public String join(ClientThreadPC user) {
+        if (!exists(user)) {
+            members.add(user);
             return "You have joined the group";
         }
         return "You are already a member of this group";
     }
 
-    public String leave(String username){
-        if (exists(username)){
+    public String leave(ClientThreadPC user){
+        if (exists(user)){
             for (int i = 0; i < members.size(); i++) {
-                if (username.equals(members.get(i))) {
+                if (user.getUsername().equals(members.get(i).getUsername())) {
                     members.remove(i);
                     return "You have left the group.";
                 }
@@ -41,27 +41,32 @@ public class Group {
         }
         return "You are not a member of this group.";
     }
-    public String kickMember(String owner, String username) {
+    public String kickMember(ClientThreadPC owner, ClientThreadPC user) {
         if (owner.equals(this.owner)) {
-            if (exists(username)) {
-                for (int i = 0; i < members.size(); i++) {
-                    if (username.equals(members.get(i)) && !username.equals(this.owner)) {
-                        members.remove(i);
-                        return "Member kicked.";
-                    } else {
-                        return "Member could not be kicked.";
+            if (!user.getUsername().equals(this.owner.getUsername())) {
+                if (exists(user)) {
+                    for (int i = 0; i < members.size(); i++) {
+                        if (members.get(i).getUsername().equals(user.getUsername())){
+                            members.remove(i);
+                            return "Member has been kicked.";
+                        }
                     }
+                } else {
+                    return "The member that you are trying to kick does not belong to this group.";
                 }
+            } else {
+                return "You cannot kick the Owner of the group.";
             }
-            return "Member doesn't exist";
+        } else {
+            return "You have no permissions to kick.";
         }
-        return "You have no permissions to kick.";
+        return null;
     }
 
-    public boolean exists(String username) {
+    public boolean exists(ClientThreadPC user) {
         if (members.size() > 0) {
-            for (String member : members) {
-                if (username.equals(member)) {
+            for (ClientThreadPC member : members) {
+                if (user.getUsername().equals(member.getUsername())) {
                     return true;
                 }
             }
@@ -69,7 +74,7 @@ public class Group {
         return false;
     }
 
-    public String getOwner() {
+    public ClientThreadPC getOwner() {
         return owner;
     }
 
@@ -77,7 +82,7 @@ public class Group {
         return groupName;
     }
 
-    public ArrayList<String> getMembers() {
+    public ArrayList<ClientThreadPC> getMembers() {
         return members;
     }
 
