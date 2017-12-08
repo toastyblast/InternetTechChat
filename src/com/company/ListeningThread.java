@@ -33,7 +33,7 @@ public class ListeningThread implements Runnable {
 
             if (serverMessage != null) {
 
-                if (serverMessage.contains("BCST") || serverMessage.contains("WSPR")) { //If it is a normal message display it to the user.
+                if (serverMessage.contains("BCST") || serverMessage.contains("WSPR") || serverMessage.contains("GRPMSG")) { //If it is a normal message display it to the user.
                     //When a normal message is received it will be shown to the client along with the time that it was
                     //send at.
                     //PURELY COSMETIC CODE.
@@ -42,6 +42,23 @@ public class ListeningThread implements Runnable {
 
                     if (serverMessage.contains("WSPR")) {
                         System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("WSPR", "[WHISPER]"));
+                    }
+                    else if (serverMessage.contains("GRPMSG")) {
+                        ArrayList<String> message = new ArrayList<>(Arrays.asList(serverMessage.split(" ")));
+
+                        String groupName = "Group not recognized";
+                        if (message.size()  >= 3) {
+                            groupName = message.get(2);
+                            message.remove(2);
+                        }
+
+                        StringBuilder sb = new StringBuilder();
+                        for (String messagePart : message) {
+                            sb.append(messagePart);
+                            sb.append(" ");
+                        }
+
+                        System.out.println(dtf.format(now) + " " + sb.toString().replaceAll("GRPMSG", "[" + groupName + "]"));
                     } else {
                         System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("BCST", "[GLOBAL]"));
                     }
@@ -63,24 +80,20 @@ public class ListeningThread implements Runnable {
                     }
 
                     //Change the part after the - and IN to the name of the actual group this is a list of users of.
-                    System.out.println("~-= List of the users in chat group [" + messageGroup + "] =-~" + sb.toString());
-                }
-                else if (serverMessage.equals("+OK Goodbye")) { // If this is the final message stop the timer.
+                    System.out.println("~-= List of the users in chat group [" + messageGroup + "] =-~" + sb.toString().replaceAll("::", " "));
+                } else if (serverMessage.equals("+OK Goodbye")) { // If this is the final message stop the timer.
                     //This message is received when the user types "quit".
                     //When the message is received the thread is stopped from listening.
                     System.out.println(serverMessage);
                     singleton.setContinueToChat(false);
                     break;
+                } else if (serverMessage.contains("+GRP")){
+                    System.out.println(serverMessage);
                 } else if (serverMessage.contains("-ERR")) {
                     System.out.println(serverMessage);
                 } else if (serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                     //Do nothing.
-                } else if (serverMessage.contains("+GRP")){
-                    System.out.println(serverMessage);
-                } else if (serverMessage.contains("GRPMSG")){
-                    System.out.println(serverMessage);
-                }
-                else {
+                } else {
                     //If a message from unknown type has been received this means it was corrupted.
                     //The program prints it to the user so he knows that the message was not sent.
                     if (singleton.isMessageSent()){

@@ -172,7 +172,14 @@ public class Server {
                                 //The user is trying to whisper to another user.
                                 ArrayList<String> myList = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
                                 //Grab the username after the "/whisper " part. Whisper is words[0], the username is words[1].
-                                String userToWhisper = myList.get(1);
+
+                                String userToWhisper;
+                                if (myList.size() > 1) {
+                                    userToWhisper = myList.get(1);
+                                } else {
+                                    writeToClient("-ERR You did not include which user to whisper. Use like: /whisper <username>");
+                                    break;
+                                }
 
                                 boolean userExists = false;
                                 ClientThread threadToMessage = null;
@@ -206,22 +213,39 @@ public class Server {
 
                                 break;
                             case USRS:
-//                                ArrayList<String> commandString = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
-//
-//                                if (commandString.size() > 1) {
-//                                    //TODO - IDEA: This means the user wants to get a list of users in a specific group.
-//                                    String groupToGetUsersOf = commandString.get(1);
-//                                } else {
-//                                    //Return the list of all users online on the complete system.
-//                                }
+                                ArrayList<String> commandString = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
 
                                 StringBuilder sb = new StringBuilder();
-                                //Change the part after the dash to the name of the group this is a list of users of.
-                                sb.append("USRS,GLOBAL");
 
-                                for (ClientThread ct : threads) {
-                                    sb.append(",");
-                                    sb.append(ct.getUsername());
+                                if (commandString.size() > 1) {
+                                    String groupToGetUsersOf = commandString.get(1);
+
+                                    if (groupExists(groupToGetUsersOf)) {
+                                        sb.append("USRS," + groupToGetUsersOf);
+
+                                        Group group = findGroup(groupToGetUsersOf);
+                                        ArrayList<String> groupMembers = group.getMembers();
+
+                                        sb.append(",");
+                                        sb.append(group.getOwner());
+                                        sb.append("::[OWNER]");
+
+                                        for (int i = 1; i < groupMembers.size(); i++) {
+                                            //Start from the second index (1), as on the first index (0) of the list the owner is always located at the start of the list.
+                                            sb.append(",");
+                                            sb.append(username);
+                                        }
+                                    } else {
+                                        sb.append("-ERR Group does not exist.");
+                                    }
+                                } else {
+                                    //Change the part after the dash to the name of the group this is a list of users of.
+                                    sb.append("USRS,GLOBAL");
+
+                                    for (ClientThread ct : threads) {
+                                        sb.append(",");
+                                        sb.append(ct.getUsername());
+                                    }
                                 }
 
                                 writeToClient(sb.toString());
@@ -229,22 +253,46 @@ public class Server {
                                 break;
                             case GRP:
                                 ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
-                                String command = commandStringGRP.get(1);
+
+                                String command;
+
+                                if (commandStringGRP.size() > 1) {
+                                    command = commandStringGRP.get(1);
+                                } else {
+                                    writeToClient("-ERR. Wrong command use, please use as: /grp <command>");
+                                    break;
+                                }
+
                                 System.out.println(command);
 
                                 if (command.equals("create")){
-                                    String groupName = commandStringGRP.get(2);
+                                    String groupName;
+
+                                    if (commandStringGRP.size() > 2) {
+                                        groupName = commandStringGRP.get(2);
+                                    } else {
+                                        writeToClient("-ERR. Wrong command use, please use as: /grp create <group-name>");
+                                        break;
+                                    }
+
                                     if (groupExists(groupName)){
                                         writeToClient("-ERR Group name is already in use.");
                                     } else if (!groupExists(groupName)){
                                         groups.add(new Group(groupName, getUsername()));
                                         Group lastGroup = groups.get(groups.size()-1);
-                                        writeToClient("+GRP Group created. " + lastGroup.getGroupName() + " "
-                                                + lastGroup.getOwner());
+
+                                        writeToClient("+GRP Group created. " + lastGroup.getGroupName() + ". Owned by: " + lastGroup.getOwner());
                                     }
                                 } else if (command.equals("join")){
-                                    String groupName = commandStringGRP.get(2);
-                                    System.out.println(groupName);
+                                    String groupName;
+
+                                    if (commandStringGRP.size() > 2) {
+                                        groupName = commandStringGRP.get(2);
+                                    } else {
+                                        writeToClient("-ERR. Wrong command use, please use as: /grp join <group-name>");
+                                        break;
+                                    }
+
                                     if (groupExists(groupName)){
                                         writeToClient("+GRP " + findGroup(groupName).join(getUsername()));
                                     } else {
@@ -253,28 +301,52 @@ public class Server {
                                 } else if (command.equals("allgroups")){
                                     writeToClient("+GRP " + groups);
                                 } else if (command.equals("leave")){
-                                    String groupName = commandStringGRP.get(2);
+                                    String groupName;
+
+                                    if (commandStringGRP.size() > 2) {
+                                        groupName = commandStringGRP.get(2);
+                                    } else {
+                                        writeToClient("-ERR Please specify the group you want to leave. Command: /grp leave <group-name>");
+                                        break;
+                                    }
+
                                     if (groupExists(groupName)){
                                         writeToClient("+GRP " + findGroup(groupName).leave(getUsername()));
                                     } else {
                                         writeToClient("-ERR Group that you are trying to leave does not exist.");
                                     }
                                 } else if (command.equals("kick")){
-                                    String groupName = commandStringGRP.get(2);
-                                    String memberToKick = commandStringGRP.get(3);
+                                    String groupName;
+                                    String memberToKick;
+
+                                    if (commandStringGRP.size() > 3) {
+                                        groupName = commandStringGRP.get(2);
+                                        memberToKick = commandStringGRP.get(3);
+                                    } else {
+                                        writeToClient("-ERR Wrong command use, please use it like: /grp kick <group-name> <user-name>");
+                                        break;
+                                    }
+
                                     if (groupExists(groupName)){
                                         writeToClient("+GRP " + findGroup(groupName).kickMember(getUsername(), memberToKick));
                                     }
                                 } else if (command.equals("msg")){
-                                    String groupName = commandStringGRP.get(2);
-                                    System.out.println(groupName);
+                                    String groupName;
+
+                                    if (commandStringGRP.size() > 2) {
+                                        groupName = commandStringGRP.get(2);
+                                    } else {
+                                        writeToClient("-ERR Wrong command use, please use it like: /grp msg <group-name> <message...>");
+                                        break;
+                                    }
+
                                     if (groupExists(groupName)){
-
                                         Group group = findGroup(groupName);
-                                        if (group.exists(getUsername())) {
 
+                                        if (group.exists(getUsername())) {
                                             List<String> messageStrings = commandStringGRP.subList(3, commandStringGRP.size());
                                             StringBuilder fullMessage = new StringBuilder();
+
                                             for (String msg : messageStrings) {
                                                 fullMessage.append(msg).append(" ");
                                             }
@@ -337,7 +409,7 @@ public class Server {
         }
 
         /**
-         * An external process can stop the client using this methode.
+         * An external process can stop the client using this method.
          */
         public void kill() {
             try {
