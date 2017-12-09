@@ -35,6 +35,7 @@ public class Group {
             for (int i = 0; i < members.size(); i++) {
                 if (user.getUsername().equals(members.get(i).getUsername())) {
                     members.remove(i);
+
                     return "You have left the group.";
                 }
             }
@@ -48,14 +49,14 @@ public class Group {
                     for (int i = 0; i < members.size(); i++) {
                         if (members.get(i).getUsername().equals(user.getUsername())){
                             members.remove(i);
-                            return "Member has been kicked.";
+                            return "Member " + user.getUsername() + " has been kicked.";
                         }
                     }
                 } else {
                     return "The member that you are trying to kick does not belong to this group.";
                 }
             } else {
-                return "You cannot kick the Owner of the group.";
+                return "You cannot kick yourself, as you are the owner.";
             }
         } else {
             return "You have no permissions to kick.";
@@ -72,6 +73,17 @@ public class Group {
             }
         }
         return false;
+    }
+
+    public ClientThreadPC getMember(String username) {
+        if (members.size() > 0) {
+            for (ClientThreadPC member : members) {
+                if (username.equals(member.getUsername())) {
+                    return member;
+                }
+            }
+        }
+        return null;
     }
 
     public ClientThreadPC getOwner() {
