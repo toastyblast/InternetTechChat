@@ -29,6 +29,7 @@ public class ClientOpening {
                 try {
                     System.out.println(singleton.getBufferedReader().readLine()); // Show welcoming message.
                     logged = true;
+                    singleton.setStateOfTheUser("Connected");
                 } catch (SocketTimeoutException ste) {
                     //If the server doesn't send a connection confirmation message for 10s exception will be thrown
                     //and the client will try to reconnect again.
@@ -42,7 +43,22 @@ public class ClientOpening {
         }
 
         //Ask the user for username.
-        serverHandler.login();
+        String loginResponseFromServer;
+        boolean validCredentials = false;
+        while (!validCredentials){
+            serverHandler.login();
+            try {
+                loginResponseFromServer = singleton.getBufferedReader().readLine();
+                if (loginResponseFromServer.equals("+OK " + singleton.getUserName())){
+                    validCredentials = true;
+                    singleton.setStateOfTheUser("Logged");
+                } else {
+                    System.out.println(loginResponseFromServer);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         System.out.println("Successfully logged in. \n" + "You can now type a message and press enter to chat.");
 
@@ -54,7 +70,7 @@ public class ClientOpening {
         listen.start();
 //        connect.start();
 
-        while (singleton.isContinueToChat()) {
+        while (!singleton.getStateOfTheUser().equals("Disconnected")) {
             try {
 
                 serverHandler.sendMessage();

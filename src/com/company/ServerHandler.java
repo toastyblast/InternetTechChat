@@ -76,7 +76,7 @@ public class ServerHandler extends Thread {
 
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
         writer.println("HELO " + userInput);
-        writer.println("BCST has entered WhatsUpp. Say hi!");
+//        writer.println("BCST has entered WhatsUpp. Say hi!");
 
         writer.flush();
     }
@@ -86,10 +86,11 @@ public class ServerHandler extends Thread {
      */
     private void quit() {
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
-        writer.println("has left the chat.");
+//        writer.println("has left the chat.");
         writer.println("QUIT");
 
         writer.flush();
+        singleton.setStateOfTheUser("Disconnected");
     }
 
     //Methods...

@@ -77,6 +77,7 @@ public class ClientThreadPC implements Runnable {
                             // Close connection
                             state = FINISHED;
                             writeToClient("+OK Goodbye");
+                            broadcastSystemMessage("BCST", this.username + " has left the chat!");
                             break;
                         case TEST:
                             break;
@@ -223,8 +224,25 @@ public class ClientThreadPC implements Runnable {
 
                 this.username = message.getPayload();
                 writeToClient("+OK " + getUsername());
+
+                for (ClientThreadPC ct : threads) {
+                    if (ct != this) {
+                        ct.writeToClient("BCST - " + "SYSTEM" + ": " + this.username + " has entered the chat!");
+                    }
+                }
             }
         }
+    }
+
+    private void broadcastSystemMessage(String type, String message) {
+        // Broadcast to other clients.
+        for (ClientThreadPC ct : threads) {
+            if (ct != this) {
+                ct.writeToClient(type + " - " + "SYSTEM" + ": " + message);
+            }
+        }
+
+        writeToClient("+OK");
     }
 
     private void broadcastMessage(Message message) {

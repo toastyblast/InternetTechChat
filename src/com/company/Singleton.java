@@ -14,6 +14,7 @@ public class Singleton {
     private String userName;
     private String lastMessage;
     private boolean messageSent;
+    private String stateOfTheUser;
 
     public static final String SERVER_ADDRESS = "localhost";
     public static final int SERVER_PORT = 1337;
@@ -84,6 +85,14 @@ public class Singleton {
 
     public void setMessageSent(boolean messageSent) {
         this.messageSent = messageSent;
+    }
+
+    public String getStateOfTheUser() {
+        return stateOfTheUser;
+    }
+
+    public void setStateOfTheUser(String stateOfTheUser) {
+        this.stateOfTheUser = stateOfTheUser;
     }
 
     public void reconnect(){
