@@ -426,6 +426,8 @@ public class ClientThreadPC implements Runnable {
                         ct.writeToClient("GRPMSG - " + groupName + " " + getUsername() + ": " + fullMessage);
                     }
                 }
+
+                writeToClient("+OK");
             } else {
                 writeToClient("-ERR You are not a member of this group.");
             }
