@@ -200,37 +200,41 @@ public class ClientThreadPC implements Runnable {
 
     private void handleUserLogin(Message message) {
         // Check username format.
-        boolean isValidUsername = message.getPayload().matches("[a-zA-Z0-9_]{3,14}");
+        if (state != CONNECTED) {
+            boolean isValidUsername = message.getPayload().matches("[a-zA-Z0-9_]{3,14}");
 
-        if (!isValidUsername) {
-            state = FINISHED;
-            writeToClient("-ERR username has an invalid format (only characters, numbers and underscores are allowed)");
-        } else {
-            // Check if user already exists.
-            boolean userExists = false;
-
-            for (ClientThreadPC ct : threads) {
-
-                if (ct != this && message.getPayload().equals(ct.getUsername())) {
-                    userExists = true;
-                    break;
-                }
-            }
-
-            if (userExists) {
-                writeToClient("-ERR user already logged in");
+            if (!isValidUsername) {
+                state = FINISHED;
+                writeToClient("-ERR username has an invalid format (only characters, numbers and underscores are allowed)");
             } else {
-                state = CONNECTED;
-
-                this.username = message.getPayload();
-                writeToClient("+OK " + getUsername());
+                // Check if user already exists.
+                boolean userExists = false;
 
                 for (ClientThreadPC ct : threads) {
-                    if (ct != this) {
-                        ct.writeToClient("BCST - " + "SYSTEM" + ": " + this.username + " has entered the chat!");
+
+                    if (ct != this && message.getPayload().equals(ct.getUsername())) {
+                        userExists = true;
+                        break;
+                    }
+                }
+
+                if (userExists) {
+                    writeToClient("-ERR user already logged in");
+                } else {
+                    state = CONNECTED;
+
+                    this.username = message.getPayload();
+                    writeToClient("+OK " + getUsername());
+
+                    for (ClientThreadPC ct : threads) {
+                        if (ct != this) {
+                            ct.writeToClient("BCST - " + "SYSTEM" + ": " + this.username + " has entered the chat!");
+                        }
                     }
                 }
             }
+        } else {
+            writeToClient("-ERR You are already logged in. You cannot log in while you are already connected.");
         }
     }
 
