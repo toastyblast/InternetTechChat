@@ -1,15 +1,13 @@
 package com.company;
 
 import java.io.*;
-import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 
 public class ClientOpening {
 
     private Thread listen;
     private Thread connect;
-    ServerHandler serverHandler;
+    private ServerHandler serverHandler;
     private Singleton singleton = Singleton.getInstance();
 
     public static void main(String[] args) {

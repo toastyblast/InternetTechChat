@@ -1,15 +1,16 @@
 package nl.saxion.internettech;
 
+import javax.net.ssl.*;
 import java.io.*;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.security.*;
+import java.security.cert.CertificateException;
 import java.util.*;
 
 import static nl.saxion.internettech.ServerState.*;
 
 public class Server {
 
-    private ServerSocket serverSocket;
+    private SSLServerSocket sslServerSocket;
     private Set<ClientThreadPC> threads;
     private ServerConfiguration conf;
     private ArrayList<Group> groups = new ArrayList<>();
@@ -25,12 +26,21 @@ public class Server {
     public void run() {
         // Create a socket to wait for clients.
         try {
-            serverSocket = new ServerSocket(conf.SERVER_PORT);
+            SSLContext context = SSLContext.getInstance("TLS");
+            KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
+            KeyStore keyStore = KeyStore.getInstance("JKS");
+
+            keyStore.load(new FileInputStream("D:/IdeaProjects/InternetTechChatSSLTest/keystore.txt"), "storepass".toCharArray());
+            keyManagerFactory.init(keyStore, "keypass".toCharArray());
+            context.init(keyManagerFactory.getKeyManagers(), null, null);
+
+            SSLServerSocketFactory factory = context.getServerSocketFactory();
+            sslServerSocket = (SSLServerSocket)factory.createServerSocket(1337);
             threads = new HashSet<>();
 
             while (true) {
                 // Wait for an incoming client-connection request (blocking).
-                Socket socket = serverSocket.accept();
+                SSLSocket socket = (SSLSocket) sslServerSocket.accept();
 
                 // When a new connection has been established, start a new thread.
                 ClientThreadPC ct = new ClientThreadPC(this, socket);
@@ -45,6 +55,16 @@ public class Server {
                 }
             }
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (UnrecoverableKeyException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
             e.printStackTrace();
         }
     }
@@ -85,9 +105,4 @@ public class Server {
             }
         }
     }
-
-    /**
-     * This inner class is used to handle all communication between the server and a
-     * specific client.
-     */
 }

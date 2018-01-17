@@ -1,7 +1,7 @@
 package nl.saxion.internettech;
 
+import javax.net.ssl.SSLSocket;
 import java.io.*;
-import java.net.Socket;
 import java.util.*;
 
 import static nl.saxion.internettech.ServerState.*;
@@ -13,7 +13,7 @@ import static nl.saxion.internettech.ServerState.FINISHED;
 public class ClientThreadPC implements Runnable {
     private DataInputStream is;
     private OutputStream os;
-    private Socket socket;
+    private SSLSocket socket;
     private ServerState state;
     private String username;
 
@@ -23,7 +23,7 @@ public class ClientThreadPC implements Runnable {
     private ServerConfiguration conf;
     private ArrayList<Group> groups = new ArrayList<>();
 
-    public ClientThreadPC(Server server, Socket socket) {
+    public ClientThreadPC(Server server, SSLSocket socket) {
         this.state = INIT;
         this.socket = socket;
 

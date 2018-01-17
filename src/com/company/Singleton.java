@@ -1,12 +1,14 @@
 package com.company;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.Socket;
 
 public class Singleton {
     private static Singleton ourInstance = new Singleton();
 
-    private Socket socket;
+    private SSLSocket sslSocket;
     private OutputStream outputStream;
     private InputStream inputStream;
     private BufferedReader bufferedReader;
@@ -26,17 +28,20 @@ public class Singleton {
         //Constructor is not needed.
     }
 
-    public Socket getSocket() {
-        return socket;
+    public Socket getSslSocket() {
+        return sslSocket;
     }
 
     public void setSocket() throws IOException {
-        this.socket = new Socket(SERVER_ADDRESS, SERVER_PORT);
+        System.setProperty("javax.net.ssl.trustStore", "D:/IdeaProjects/InternetTechChatSSLTest/truststore.txt");
+        System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
+        SSLSocketFactory sslsocketfactory = (SSLSocketFactory )SSLSocketFactory.getDefault();
+        this.sslSocket = (SSLSocket) sslsocketfactory.createSocket(SERVER_ADDRESS, SERVER_PORT);
 
         try {
-            socket.setSoTimeout(200);
-            this.outputStream = this.socket.getOutputStream();
-            this.inputStream = this.socket.getInputStream();
+            sslSocket.setSoTimeout(200);
+            this.outputStream = this.sslSocket.getOutputStream();
+            this.inputStream = this.sslSocket.getInputStream();
             this.bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         } catch (IOException e) {
             e.printStackTrace();
