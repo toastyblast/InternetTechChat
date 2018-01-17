@@ -17,6 +17,13 @@ public class ClientThreadPC implements Runnable {
     private ServerState state;
     private String username;
 
+    //Data for file sending.
+    private boolean sending = false;
+    private String sender;
+    private String receiver;
+    private int fileSize;
+    private FileTransferSingleton singleton = FileTransferSingleton.getInstance();
+
     private Server server;
 
     private Set<ClientThreadPC> threads;
@@ -54,48 +61,56 @@ public class ClientThreadPC implements Runnable {
             writeToClient(welcomeMessage);
 
             while (!state.equals(FINISHED)) {
-                // Wait for message from the client.
-                String line = reader.readLine();
+                if (!sending) {
+                    // Wait for message from the client.
+                    String line = reader.readLine();
 
-                if (line != null) {
-                    // Log incoming message for debug purposes.
-                    boolean isIncomingMessage = true;
-                    logMessage(isIncomingMessage, line);
+                    if (line != null) {
+                        // Log incoming message for debug purposes.
+                        boolean isIncomingMessage = true;
+                        logMessage(isIncomingMessage, line);
 
-                    // Parse incoming message.
-                    Message message = new Message(line);
+                        // Parse incoming message.
+                        Message message = new Message(line);
 
-                    // Process message.
-                    switch (message.getMessageType()) {
-                        case HELO:
-                            handleUserLogin(message);
-                            break;
-                        case BCST:
-                            broadcastMessage(message);
-                            break;
-                        case QUIT:
-                            // Close connection
-                            state = FINISHED;
-                            writeToClient("+OK Goodbye");
-                            broadcastSystemMessage("BCST", this.username + " has left the chat!");
-                            break;
-                        case TEST:
-                            break;
-                        case UNKOWN:
-                            // Unkown command has been sent
-                            writeToClient("-ERR Unkown command");
-                            break;
-                        case WSPR:
-                            //The user is trying to whisper to another user.
-                            sendWhisper(message);
-                            break;
-                        case USRS:
-                            sendUsersList(message);
-                            break;
-                        case GRP:
-                            handleGroupMessages(message);
-                            break;
+                        // Process message.
+                        switch (message.getMessageType()) {
+                            case HELO:
+                                handleUserLogin(message);
+                                break;
+                            case BCST:
+                                broadcastMessage(message);
+                                break;
+                            case QUIT:
+                                // Close connection
+                                state = FINISHED;
+                                writeToClient("+OK Goodbye");
+                                broadcastSystemMessage("BCST", this.username + " has left the chat!");
+                                break;
+                            case TEST:
+                                break;
+                            case UNKOWN:
+                                // Unkown command has been sent
+                                writeToClient("-ERR Unkown command");
+                                break;
+                            case WSPR:
+                                //The user is trying to whisper to another user.
+                                sendWhisper(message);
+                                break;
+                            case USRS:
+                                sendUsersList(message);
+                                break;
+                            case GRP:
+                                handleGroupMessages(message);
+                                break;
+                            case UPLD:
+                                startUploading(message);
+                            case DNLD:
+                                handlingDownloadResponse(message);
+                        }
                     }
+                } else if (sending){
+                    uploadFileToServer();
                 }
             }
             // Remove from the list of client threads and close the socket.
@@ -259,7 +274,71 @@ public class ClientThreadPC implements Runnable {
 
         writeToClient("+OK");
     }
+    /*--- START OF FILE-TRANSFER HANDLING --------------------------------------------------------------------*/
+    private void startUploading(Message message){
+        ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
+        sender = extractCertainPartOfString(commandStringGRP, 0);
+        receiver = extractCertainPartOfString(commandStringGRP, 1);
+        fileSize = Integer.parseInt(extractCertainPartOfString(commandStringGRP, 2));
+        sending = true;
+    }
+    private void uploadFileToServer() throws IOException {
+        DataInputStream dis = new DataInputStream(socket.getInputStream());
+        byte[] buffer = new byte[16000];
 
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        int filesize = fileSize ; // Send file size in separate msg
+        int read = 0;
+        int totalRead = 0;
+        int remaining = filesize;
+        while((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+            totalRead += read;
+            remaining -= read;
+            System.out.println("read " + totalRead + " bytes.");
+            stream.write(buffer, 0, read);
+        }
+        stream.close();
+        singleton.getFiles().add(new FileToTransfer(sender, receiver, stream.toByteArray(), filesize));
+        askUserForDownloadApproval();
+        dis.close();
+    }
+
+    private void askUserForDownloadApproval(){
+        ClientThreadPC threadToSend = null;
+        for (ClientThreadPC ct : threads) {
+            if (ct != this && ct.getUsername().equals(receiver)) {
+                threadToSend = ct;
+                break;
+            }
+        }
+        threadToSend.writeToClient("RQST The user (" + sender + ") wants to send you a file. Size: "
+                + singleton.getFiles().get(0).getFileSize() + ". If you want to accept the file type /receive accept. " +
+                "If you want to decline, type /receive decline." );
+    }
+
+    private void handlingDownloadResponse(Message message) throws IOException {
+        ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
+        String response = extractCertainPartOfString(commandStringGRP, 0);
+        if (response.equals("ready")){
+            sendBytes();
+        } else if (response.equals("accept")){
+            writeToClient("BEGIN_DNLD " + singleton.getFiles().get(0).getFileSize());
+        }
+    }
+
+    private void sendBytes() throws IOException {
+        DataOutputStream dos = new DataOutputStream(os);
+        ByteArrayInputStream fis = new ByteArrayInputStream(singleton.getFiles().get(0).getFile());
+        byte[] buffer = new byte[4096];
+
+        while (fis.read(buffer) > 0) {
+            dos.write(buffer);
+        }
+
+        fis.close();
+        dos.close();
+    }
+    /*--- END OF FILE-TRANSFER HANDLING --------------------------------------------------------------------*/
     /*--- START OF GROUP-RELATED MESSAGE HANDLING --------------------------------------------------------------------*/
 
     /**
