@@ -9,7 +9,9 @@ public class Message {
         UNKOWN,
         WSPR,
         USRS,
-        GRP
+        GRP,
+        UPLD,
+        DNLD
     }
 
     private String line;

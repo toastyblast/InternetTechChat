@@ -15,6 +15,7 @@ public class Singleton {
     private String lastMessage;
     private boolean messageSent;
     private String stateOfTheUser;
+    private String filePath;
 
     public static final String SERVER_ADDRESS = "localhost";
     public static final int SERVER_PORT = 1337;
@@ -108,5 +109,13 @@ public class Singleton {
             e.printStackTrace();
         }
 
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 }
