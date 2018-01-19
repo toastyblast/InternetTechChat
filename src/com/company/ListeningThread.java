@@ -1,6 +1,8 @@
 package com.company;
 
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
@@ -16,7 +18,7 @@ public class ListeningThread implements Runnable {
     private Singleton singleton = Singleton.getInstance();
     boolean receiving = false;
     //Data for new downloading socket.
-    private Socket newDownloadSocket;
+    private SSLSocket newDownloadSocket;
     private OutputStream outputStream;
     private InputStream inputStream;
     private BufferedReader bufferedReader;
@@ -188,7 +190,11 @@ public class ListeningThread implements Runnable {
     }
 
     private void createDownloadSocket() throws IOException {
-        this.newDownloadSocket = new Socket("localhost", 1337);
+        System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
+        System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
+        SSLSocketFactory sslsocketfactory = (SSLSocketFactory )SSLSocketFactory.getDefault();
+        this.newDownloadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
+
         this.outputStream = this.newDownloadSocket.getOutputStream();
         this.inputStream = this.newDownloadSocket.getInputStream();
         this.bufferedReader = new BufferedReader(new InputStreamReader(this.inputStream));

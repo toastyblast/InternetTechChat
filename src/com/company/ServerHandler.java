@@ -1,5 +1,7 @@
 package com.company;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
@@ -8,7 +10,7 @@ public class ServerHandler extends Thread {
     private String userName;
     private Singleton singleton = Singleton.getInstance();
     //Data for the upload socket.
-    private Socket newUploadSocket;
+    private SSLSocket newUploadSocket;
     private OutputStream outputStream;
     private InputStream inputStream;
     private BufferedReader bufferedReader;
@@ -146,7 +148,11 @@ public class ServerHandler extends Thread {
      * @throws IOException
      */
     private void createUploadSocket() throws IOException {
-        this.newUploadSocket = new Socket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
+        System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
+        System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
+        SSLSocketFactory sslsocketfactory = (SSLSocketFactory )SSLSocketFactory.getDefault();
+        this.newUploadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
+
         this.outputStream = this.newUploadSocket.getOutputStream();
         this.inputStream = this.newUploadSocket.getInputStream();
         this.bufferedReader = new BufferedReader(new InputStreamReader(this.inputStream));

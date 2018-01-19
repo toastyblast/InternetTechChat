@@ -19,7 +19,7 @@ public class Singleton {
     private String stateOfTheUser;
     private String filePath;
 
-    public static final String SERVER_ADDRESS = "192.168.1.100";
+    public static final String SERVER_ADDRESS = "192.168.1.102";
     public static final int SERVER_PORT = 1337;
     public static Singleton getInstance() {
         return ourInstance;
