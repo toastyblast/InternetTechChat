@@ -19,7 +19,7 @@ public class Singleton {
     private String stateOfTheUser;
     private String filePath;
 
-    public static final String SERVER_ADDRESS = "localhost";
+    public static final String SERVER_ADDRESS = "192.168.1.100";
     public static final int SERVER_PORT = 1337;
     public static Singleton getInstance() {
         return ourInstance;
@@ -34,7 +34,7 @@ public class Singleton {
     }
 
     public void setSocket() throws IOException {
-        System.setProperty("javax.net.ssl.trustStore", "D:/IdeaProjects/InternetTechChatSSLTest/truststore.txt");
+        System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
         System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
         SSLSocketFactory sslsocketfactory = (SSLSocketFactory )SSLSocketFactory.getDefault();
         this.sslSocket = (SSLSocket) sslsocketfactory.createSocket(SERVER_ADDRESS, SERVER_PORT);

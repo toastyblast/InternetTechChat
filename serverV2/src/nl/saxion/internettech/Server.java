@@ -30,7 +30,7 @@ public class Server {
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
             KeyStore keyStore = KeyStore.getInstance("JKS");
 
-            keyStore.load(new FileInputStream("D:/IdeaProjects/InternetTechChatSSLTest/keystore.txt"), "storepass".toCharArray());
+            keyStore.load(new FileInputStream("./keystore.txt"), "storepass".toCharArray());
             keyManagerFactory.init(keyStore, "keypass".toCharArray());
             context.init(keyManagerFactory.getKeyManagers(), null, null);
 

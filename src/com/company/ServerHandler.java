@@ -146,7 +146,7 @@ public class ServerHandler extends Thread {
      * @throws IOException
      */
     private void createUploadSocket() throws IOException {
-        this.newUploadSocket = new Socket("localhost", 1337);
+        this.newUploadSocket = new Socket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
         this.outputStream = this.newUploadSocket.getOutputStream();
         this.inputStream = this.newUploadSocket.getInputStream();
         this.bufferedReader = new BufferedReader(new InputStreamReader(this.inputStream));
