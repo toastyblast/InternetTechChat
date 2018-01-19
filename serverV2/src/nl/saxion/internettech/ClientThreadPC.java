@@ -15,13 +15,14 @@ public class ClientThreadPC implements Runnable {
     private OutputStream os;
     private SSLSocket socket;
     private ServerState state;
-    private String username;
+    private String username = "";
 
     //Data for file sending.
     private boolean sending = false;
     private String sender;
     private String receiver;
     private int fileSize;
+    private String fileExtension;
     private FileTransferSingleton singleton = FileTransferSingleton.getInstance();
 
     private Server server;
@@ -105,8 +106,10 @@ public class ClientThreadPC implements Runnable {
                                 break;
                             case UPLD:
                                 startUploading(message);
+                                break;
                             case DNLD:
                                 handlingDownloadResponse(message);
+                                break;
                         }
                     }
                 } else if (sending){
@@ -280,6 +283,7 @@ public class ClientThreadPC implements Runnable {
         sender = extractCertainPartOfString(commandStringGRP, 0);
         receiver = extractCertainPartOfString(commandStringGRP, 1);
         fileSize = Integer.parseInt(extractCertainPartOfString(commandStringGRP, 2));
+        fileExtension = extractCertainPartOfString(commandStringGRP, 3);
         sending = true;
     }
     private void uploadFileToServer() throws IOException {
@@ -300,35 +304,43 @@ public class ClientThreadPC implements Runnable {
         stream.close();
         singleton.getFiles().add(new FileToTransfer(sender, receiver, stream.toByteArray(), filesize));
         askUserForDownloadApproval();
+        deleteThread();
         dis.close();
     }
 
     private void askUserForDownloadApproval(){
-        ClientThreadPC threadToSend = null;
-        for (ClientThreadPC ct : threads) {
-            if (ct != this && ct.getUsername().equals(receiver)) {
-                threadToSend = ct;
-                break;
+        if (findMember(receiver)){
+            for (ClientThreadPC ct : threads) {
+                if (ct != this && ct.getUsername().equals(receiver)) {
+                    ct.writeToClient("RQST " + sender + " " + fileSize + " " + fileExtension);
+                    break;
+                }
+            }
+        } else {
+            for (ClientThreadPC ct : threads) {
+                if (ct != this && ct.getUsername().equals(sender)) {
+                    ct.writeToClient("-ERR User does not exist.");
+                    break;
+                }
             }
         }
-        threadToSend.writeToClient("RQST The user (" + sender + ") wants to send you a file. Size: "
-                + singleton.getFiles().get(0).getFileSize() + ". If you want to accept the file type /receive accept. " +
-                "If you want to decline, type /receive decline." );
+
     }
 
     private void handlingDownloadResponse(Message message) throws IOException {
         ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
         String response = extractCertainPartOfString(commandStringGRP, 0);
+        String receiver = extractCertainPartOfString(commandStringGRP, 1);
         if (response.equals("ready")){
-            sendBytes();
+            sendBytes(singleton.getFile(receiver));
         } else if (response.equals("accept")){
             writeToClient("BEGIN_DNLD " + singleton.getFiles().get(0).getFileSize());
         }
     }
 
-    private void sendBytes() throws IOException {
+    private void sendBytes(FileToTransfer fileToTransfer) throws IOException {
         DataOutputStream dos = new DataOutputStream(os);
-        ByteArrayInputStream fis = new ByteArrayInputStream(singleton.getFiles().get(0).getFile());
+        ByteArrayInputStream fis = new ByteArrayInputStream(fileToTransfer.getFile());
         byte[] buffer = new byte[4096];
 
         while (fis.read(buffer) > 0) {
@@ -336,6 +348,7 @@ public class ClientThreadPC implements Runnable {
         }
 
         fis.close();
+        deleteThread();
         dos.close();
     }
     /*--- END OF FILE-TRANSFER HANDLING --------------------------------------------------------------------*/
@@ -541,8 +554,10 @@ public class ClientThreadPC implements Runnable {
 
     private boolean findMember(String user) {
         for (ClientThreadPC ct : threads) {
-            if (ct.getUsername().equals(user)) {
-                return true;
+            if (ct.getUsername() != null){
+                if (ct.getUsername().equals(user)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -659,6 +674,15 @@ public class ClientThreadPC implements Runnable {
             System.out.println(colorCode + logMessage + conf.RESET_CLI_COLORS);
         } else {
             System.out.println(logMessage);
+        }
+    }
+
+    private void deleteThread(){
+        for (ClientThreadPC ct : threads) {
+            if (ct == this) {
+                threads.remove(ct);
+                break;
+            }
         }
     }
 

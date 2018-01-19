@@ -61,7 +61,11 @@ public class ListeningThread implements Runnable {
                     } else if (serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                         //Do nothing.
                     } else if (serverMessage.contains("RQST")) {
-                        System.out.println(serverMessage);
+                        String[] split = serverMessage.split(" ");
+                        singleton.setFileExtension(split[3]);
+                        System.out.println("The user (" + split[1] + ") wants to send you a file. Size: "
+                                + split[2] + " Extension: " + split[3] +". If you want to accept the file type /receive accept. " +
+                                "If you want to decline, type /receive decline.");
                     } else if (serverMessage.contains("BEGIN_DNLD")) {
                         String[] splits = serverMessage.split(" ");
                         fileSize = Integer.parseInt(splits[1]);
@@ -87,7 +91,7 @@ public class ListeningThread implements Runnable {
                         System.out.println(serverMessage);
 
                         PrintWriter writer = new PrintWriter(outputStream);
-                        outputStream.write("DNLD ready".getBytes());
+                        outputStream.write(("DNLD ready " + singleton.getUserName()).getBytes());
                         writer.println();
                         writer.flush();
 

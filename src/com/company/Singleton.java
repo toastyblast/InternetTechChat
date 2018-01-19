@@ -18,8 +18,9 @@ public class Singleton {
     private boolean messageSent;
     private String stateOfTheUser;
     private String filePath;
+    private String fileExtension;
 
-    public static final String SERVER_ADDRESS = "192.168.1.102";
+    public static final String SERVER_ADDRESS = "localhost";
     public static final int SERVER_PORT = 1337;
     public static Singleton getInstance() {
         return ourInstance;
@@ -122,5 +123,13 @@ public class Singleton {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public String getFileExtension() {
+        return fileExtension;
+    }
+
+    public void setFileExtension(String fileExtension) {
+        this.fileExtension = fileExtension;
     }
 }
