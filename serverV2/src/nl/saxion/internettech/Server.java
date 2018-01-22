@@ -7,8 +7,6 @@ import java.security.cert.CertificateException;
 import java.util.*;
 
 public class Server {
-
-    private SSLServerSocket sslServerSocket;
     private Set<ClientThreadPC> threads;
     private ServerConfiguration conf;
     private ArrayList<Group> groups = new ArrayList<>();
@@ -33,7 +31,7 @@ public class Server {
             context.init(keyManagerFactory.getKeyManagers(), null, null);
 
             SSLServerSocketFactory factory = context.getServerSocketFactory();
-            sslServerSocket = (SSLServerSocket) factory.createServerSocket(1337);
+            SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(1337);
             threads = new HashSet<>();
 
             while (true) {
@@ -52,17 +50,8 @@ public class Server {
                     new Thread(dct).start();
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (UnrecoverableKeyException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (KeyManagementException e) {
+        } catch (IOException | KeyManagementException | KeyStoreException | UnrecoverableKeyException |
+                NoSuchAlgorithmException | CertificateException e) {
             e.printStackTrace();
         }
     }

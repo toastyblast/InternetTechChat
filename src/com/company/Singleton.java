@@ -7,9 +7,7 @@ import java.io.*;
 public class Singleton {
     private static Singleton ourInstance = new Singleton();
 
-    private SSLSocket sslSocket;
     private OutputStream outputStream;
-    private InputStream inputStream;
     private BufferedReader bufferedReader;
     private boolean continueToChat = true;
     private String userName;
@@ -34,12 +32,12 @@ public class Singleton {
         System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
         System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
         SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        this.sslSocket = (SSLSocket) sslsocketfactory.createSocket(SERVER_ADDRESS, SERVER_PORT);
+        SSLSocket sslSocket = (SSLSocket) sslsocketfactory.createSocket(SERVER_ADDRESS, SERVER_PORT);
 
         try {
             sslSocket.setSoTimeout(200);
-            this.outputStream = this.sslSocket.getOutputStream();
-            this.inputStream = this.sslSocket.getInputStream();
+            this.outputStream = sslSocket.getOutputStream();
+            InputStream inputStream = sslSocket.getInputStream();
             this.bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
         } catch (IOException e) {
             e.printStackTrace();

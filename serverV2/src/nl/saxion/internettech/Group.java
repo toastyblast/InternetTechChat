@@ -94,7 +94,7 @@ public class Group {
     @Override
     public String toString() {
         return "Group name: " + this.groupName +
-                "|| Owner: " + this.owner +
-                "|| Members: " + this.members;
+                " || Owner: " + this.owner +
+                " || Members: " + this.members;
     }
 }

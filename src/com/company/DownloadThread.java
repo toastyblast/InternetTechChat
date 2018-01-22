@@ -32,14 +32,14 @@ public class DownloadThread implements Runnable {
                 writer.println();
                 writer.flush();
 
-                DataInputStream dis = null;
+                DataInputStream dis;
                 try {
                     dis = new DataInputStream(inputStream);
                     byte[] buffer = new byte[16000];
 
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     int filesize = fileSize; // Send file size in separate msg
-                    int read = 0;
+                    int read;
                     int totalRead = 0;
                     int remaining = filesize;
                     while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {

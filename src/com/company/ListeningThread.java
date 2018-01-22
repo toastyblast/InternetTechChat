@@ -4,7 +4,6 @@ package com.company;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,9 +14,7 @@ import java.util.Arrays;
 
 public class ListeningThread implements Runnable {
     private Singleton singleton = Singleton.getInstance();
-    boolean receiving = false;
-    //Data for new downloading socket.
-    private SSLSocket newDownloadSocket;
+    private boolean receiving = false;
     private OutputStream outputStream;
     private InputStream inputStream;
     private BufferedReader bufferedReader;
@@ -35,8 +32,6 @@ public class ListeningThread implements Runnable {
 
                 try {
                     serverMessage = singleton.getBufferedReader().readLine();
-                } catch (SocketTimeoutException ignored) {
-                    //TODO: Do nothing..?
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -94,7 +89,7 @@ public class ListeningThread implements Runnable {
             } else if (receiving) {
                 try {
                     createDownloadSocket();
-                    String serverMessage = null;
+                    String serverMessage;
 
                     try {
                         serverMessage = bufferedReader.readLine();
@@ -105,14 +100,14 @@ public class ListeningThread implements Runnable {
                         writer.println();
                         writer.flush();
 
-                        DataInputStream dis = null;
+                        DataInputStream dis;
                         try {
                             dis = new DataInputStream(inputStream);
                             byte[] buffer = new byte[16000];
 
                             ByteArrayOutputStream stream = new ByteArrayOutputStream();
                             int filesize = fileSize; // Send file size in separate msg
-                            int read = 0;
+                            int read;
                             int totalRead = 0;
                             int remaining = filesize;
                             while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
@@ -198,10 +193,10 @@ public class ListeningThread implements Runnable {
         System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
         System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
         SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        this.newDownloadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
+        SSLSocket newDownloadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
 
-        this.outputStream = this.newDownloadSocket.getOutputStream();
-        this.inputStream = this.newDownloadSocket.getInputStream();
+        this.outputStream = newDownloadSocket.getOutputStream();
+        this.inputStream = newDownloadSocket.getInputStream();
         this.bufferedReader = new BufferedReader(new InputStreamReader(this.inputStream));
     }
 }

@@ -18,9 +18,9 @@ public class FileTransferSingleton {
     }
 
     public FileToTransfer getFile(String receiver){
-        for (int i = 0; i < files.size() ; i++) {
-            if (files.get(i).getReceiver().equals(receiver)){
-                return files.get(i);
+        for (FileToTransfer file : files) {
+            if (file.getReceiver().equals(receiver)) {
+                return file;
             }
         }
         return null;

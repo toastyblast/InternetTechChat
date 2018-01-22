@@ -11,7 +11,6 @@ import static nl.saxion.internettech.ServerState.FINISHED;
  * The public class of client thread.
  */
 public class ClientThreadPC implements Runnable {
-    private DataInputStream is;
     private OutputStream os;
     private SSLSocket socket;
     private ServerState state;
@@ -25,8 +24,6 @@ public class ClientThreadPC implements Runnable {
     private String fileExtension;
     private FileTransferSingleton singleton = FileTransferSingleton.getInstance();
 
-    private Server server;
-
     private Set<ClientThreadPC> threads;
     private ServerConfiguration conf;
     private ArrayList<Group> groups = new ArrayList<>();
@@ -35,25 +32,20 @@ public class ClientThreadPC implements Runnable {
         this.state = INIT;
         this.socket = socket;
 
-        this.server = server;
-        this.threads = this.server.getThreads();
-        this.conf = this.server.getConf();
-        this.groups = this.server.getGroups();
+        this.threads = server.getThreads();
+        this.conf = server.getConf();
+        this.groups = server.getGroups();
     }
 
     public String getUsername() {
         return username;
     }
 
-    public OutputStream getOutputStream() {
-        return os;
-    }
-
     public void run() {
         try {
             // Create input and output streams for the socket.
             os = socket.getOutputStream();
-            is = new DataInputStream(socket.getInputStream());
+            DataInputStream is = new DataInputStream(socket.getInputStream());
             BufferedReader reader = new BufferedReader(new InputStreamReader(is));
 
             // According to the protocol we should send HELO <welcome message>
@@ -86,7 +78,7 @@ public class ClientThreadPC implements Runnable {
                                 // Close connection
                                 state = FINISHED;
                                 writeToClient("+OK Goodbye");
-                                broadcastSystemMessage("BCST", this.username + " has left the chat!");
+                                broadcastSystemMessage(this.username + " has left the chat!");
                                 break;
                             case TEST:
                                 break;
@@ -167,19 +159,23 @@ public class ClientThreadPC implements Runnable {
             String groupToGetUsersOf = commandString.get(1);
 
             if (groupExists(groupToGetUsersOf)) {
-                sb.append("USRS," + groupToGetUsersOf);
+                sb.append("USRS,");
+                sb.append(groupToGetUsersOf);
 
                 Group group = findGroup(groupToGetUsersOf);
-                ArrayList<ClientThreadPC> groupMembers = group.getMembers();
 
-                sb.append(",");
-                sb.append(group.getOwner());
-                sb.append("::[OWNER]");
+                if (group != null) {
+                    ArrayList<ClientThreadPC> groupMembers = group.getMembers();
 
-                for (int i = 1; i < groupMembers.size(); i++) {
-                    //Start from the second index (1), as on the first index (0) of the list the owner is always located at the start of the list.
                     sb.append(",");
-                    sb.append(groupMembers.get(i).getUsername());
+                    sb.append(group.getOwner());
+                    sb.append("::[OWNER]");
+
+                    for (int i = 1; i < groupMembers.size(); i++) {
+                        //Start from the second index (1), as on the first index (0) of the list the owner is always located at the start of the list.
+                        sb.append(",");
+                        sb.append(groupMembers.get(i).getUsername());
+                    }
                 }
             } else {
                 sb.append("-ERR Group does not exist.");
@@ -278,11 +274,11 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
-    private void broadcastSystemMessage(String type, String message) {
+    private void broadcastSystemMessage(String message) {
         // Broadcast to other clients.
         for (ClientThreadPC ct : threads) {
             if (ct != this) {
-                ct.writeToClient(type + " - " + "SYSTEM" + ": " + message);
+                ct.writeToClient("BCST - SYSTEM: " + message);
             }
         }
 
@@ -317,7 +313,7 @@ public class ClientThreadPC implements Runnable {
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         int filesize = fileSize; // Send file size in separate msg
-        int read = 0;
+        int read;
         int totalRead = 0;
         int remaining = filesize;
         while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
@@ -560,8 +556,8 @@ public class ClientThreadPC implements Runnable {
 
     private boolean groupExists(String groupName) {
         if (groups.size() > 0) {
-            for (int i = 0; i < groups.size(); i++) {
-                if (groupName.equals(groups.get(i).getGroupName())) {
+            for (Group group : groups) {
+                if (groupName.equals(group.getGroupName())) {
                     return true;
                 }
             }
@@ -570,9 +566,9 @@ public class ClientThreadPC implements Runnable {
     }
 
     private Group findGroup(String groupName) {
-        for (int i = 0; i < groups.size(); i++) {
-            if (groupName.equals(groups.get(i).getGroupName())) {
-                return groups.get(i);
+        for (Group group : groups) {
+            if (groupName.equals(group.getGroupName())) {
+                return group;
             }
         }
         return null;

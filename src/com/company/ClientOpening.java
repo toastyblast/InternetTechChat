@@ -4,7 +4,6 @@ import java.io.*;
 import java.net.SocketTimeoutException;
 
 public class ClientOpening {
-    private Thread listen;
     private ServerHandler serverHandler;
     private Singleton singleton = Singleton.getInstance();
 
@@ -57,7 +56,7 @@ public class ClientOpening {
         System.out.println("Successfully logged in. \n" + "You can now type a message and press enter to chat.");
 
         //Create the thread that listens for messages from the server.
-        listen = new Thread(new ListeningThread());
+        Thread listen = new Thread(new ListeningThread());
         listen.start();
 
         while (!singleton.getStateOfTheUser().equals("Disconnected")) {
