@@ -1,7 +1,6 @@
 package nl.saxion.internettech;
 
 public class ServerConfiguration {
-
     // Constants.
     public final String WELCOME_MESSAGE = "Welkom to WhatsUpp!";
     public final String VERSION = "1.2";
@@ -10,7 +9,6 @@ public class ServerConfiguration {
     public final String RESET_CLI_COLORS = "\u001B[0m";   // ANSI RESET
     public final String CLI_COLOR_INCOMING = "\u001B[31m";    // ANSI RED
     public final String CLI_COLOR_OUTGOING = "\u001B[32m";  // ANSI GREEN
-
 
     // Enable colors in debug messages
     private boolean showColors = true;
@@ -51,5 +49,4 @@ public class ServerConfiguration {
     public void setShowColors(boolean showColors) {
         this.showColors = showColors;
     }
-
 }

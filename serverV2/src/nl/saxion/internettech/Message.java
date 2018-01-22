@@ -11,7 +11,8 @@ public class Message {
         USRS,
         GRP,
         UPLD,
-        DNLD
+        DNLD,
+        HELP
     }
 
     private String line;

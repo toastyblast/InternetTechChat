@@ -19,19 +19,19 @@ public class Main {
 
         ServerConfiguration config = new ServerConfiguration();
         for (String arg : args) {
-            if(arg.equals("--no-colors")) {
+            if (arg.equals("--no-colors")) {
                 config.setShowColors(false);
                 System.out.println(" * Colors in debug message disabled");
-            } else if(arg.equals("--bad-server-drop-msg")) {
+            } else if (arg.equals("--bad-server-drop-msg")) {
                 config.setSimulateDroppedPackets(true);
                 System.out.println(" * Drop message simulation enabled");
-            } else if(arg.equals("--bad-server-corrupt")) {
+            } else if (arg.equals("--bad-server-corrupt")) {
                 config.setSimulateCorruptedPackets(true);
                 System.out.println(" * Corrupt message simulation enabled");
-            } else if(arg.equals("--bad-server-drop-client")) {
+            } else if (arg.equals("--bad-server-drop-client")) {
                 config.setSimulateConnectionLost(true);
                 System.out.println(" * Connection lost simulation (drop clients) enabled");
-            } else if(arg.equals("--bad-server")) {
+            } else if (arg.equals("--bad-server")) {
                 config.setSimulateCorruptedPackets(true);
                 config.setSimulateDroppedPackets(true);
                 config.setSimulateConnectionLost(true);
@@ -39,8 +39,8 @@ public class Main {
             }
         }
         System.out.println("-------------------------------");
-        System.out.println("\tversion:\t"+ config.VERSION);
-        System.out.println("\tport:\t\t"+ config.SERVER_PORT);
+        System.out.println("\tversion:\t" + config.VERSION);
+        System.out.println("\tport:\t\t" + config.SERVER_PORT);
         System.out.println("-------------------------------");
         new Server(config).run();
     }

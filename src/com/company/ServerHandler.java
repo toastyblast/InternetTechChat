@@ -3,8 +3,6 @@ package com.company;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.net.Socket;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
@@ -42,26 +40,15 @@ public class ServerHandler extends Thread {
         if (userInput.equalsIgnoreCase("/quit")) {
             singleton.getOutputStream().flush();
             quit();
+        } else if (userInput.toLowerCase().startsWith("/help")) {
+            sendAnyMessage(writer, "HELP", userInput);
         } else if (userInput.toLowerCase().startsWith("/whisper")) {
-            singleton.getOutputStream().write("WSPR ".getBytes());
-            writer.println(userInput);
-            writer.flush();
-
-            singleton.setMessageSent(true);
-            singleton.setLastMessage(userInput);
+            sendAnyMessage(writer, "WSPR", userInput);
         } else if (userInput.toLowerCase().startsWith("/users")) {
-            //TODO - IDEA: Only let them return the list of the group they are currently in, if they type "/users", ignoring any input after it and adding their current group's name to the output here at the backend.
-            singleton.getOutputStream().write("USRS ".getBytes());
-            writer.println(userInput);
-            writer.flush();
-
-            singleton.setMessageSent(true);
-            singleton.setLastMessage(userInput);
-        } else if (userInput.toLowerCase().startsWith("/grp")){
-            singleton.getOutputStream().write("GRP ".getBytes());
-            writer.println(userInput);
-            writer.flush();
-        } else if (userInput.toLowerCase().startsWith("/send")){
+            sendAnyMessage(writer, "USRS", userInput);
+        } else if (userInput.toLowerCase().startsWith("/grp")) {
+            sendAnyMessage(writer, "GRP", userInput);
+        } else if (userInput.toLowerCase().startsWith("/send")) {
             try {
                 //Get the file.
                 System.out.println("Please input the file path. ");
@@ -90,13 +77,13 @@ public class ServerHandler extends Thread {
                 }
                 fis.close();
                 dos.close();
-            } catch (FileNotFoundException FNFE){
+            } catch (FileNotFoundException FNFE) {
                 System.out.println("The file could not be found.");
             }
-        } else if (userInput.toLowerCase().startsWith("/receive")){
+        } else if (userInput.toLowerCase().startsWith("/receive")) {
             String[] splits = userInput.split(" ");
 
-            if (splits[1].equals("accept")){
+            if (splits[1].equals("accept")) {
                 boolean validpath = false;
                 while (!validpath) {
                     System.out.println("Please input the download destination.");
@@ -107,7 +94,7 @@ public class ServerHandler extends Thread {
                     if (!file.getParentFile().exists()) {
                         System.out.println("Invalid path given.");
                     } else {
-                        if (file.exists()){
+                        if (file.exists()) {
                             System.out.println("File already exists. (At this path there is another file.)");
                         } else {
                             if (!singleton.getFileExtension().equals(getFileExtension(file))) {
@@ -123,15 +110,9 @@ public class ServerHandler extends Thread {
                 }
             }
 
-        }
-        else {
+        } else {
             //If it is a normal message, just send it.
-            singleton.getOutputStream().write("BCST ".getBytes());
-            writer.println(userInput);
-            writer.flush();
-
-            singleton.setMessageSent(true);
-            singleton.setLastMessage(userInput);
+            sendAnyMessage(writer, "BCST", userInput);
         }
     }
 
@@ -149,7 +130,6 @@ public class ServerHandler extends Thread {
 
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
         writer.println("HELO " + userInput);
-//        writer.println("BCST has entered WhatsUpp. Say hi!");
 
         writer.flush();
     }
@@ -166,16 +146,32 @@ public class ServerHandler extends Thread {
         singleton.setStateOfTheUser("Disconnected");
     }
 
-    //Methods...
+    /**
+     * Private helper method that sends a message to the server
+     *
+     * @param writer PrintWriter is the writer to put the message into to print to the server.
+     * @param type String is the type of message we have to send to the server.
+     * @param userInput String is the actual message the user wants to send over.
+     * @throws IOException is an exception that can happen with the PrintWriter.
+     */
+    private void sendAnyMessage(PrintWriter writer, String type, String userInput) throws IOException {
+        singleton.getOutputStream().write(type.getBytes());
+        writer.println(userInput);
+        writer.flush();
+
+        singleton.setMessageSent(true);
+        singleton.setLastMessage(userInput);
+    }
 
     /**
      * Method to create a new socket connection, with which the file is going to be uploaded to the server.
+     *
      * @throws IOException
      */
     private void createUploadSocket() throws IOException {
         System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
         System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
-        SSLSocketFactory sslsocketfactory = (SSLSocketFactory )SSLSocketFactory.getDefault();
+        SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         this.newUploadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
 
         this.outputStream = this.newUploadSocket.getOutputStream();
@@ -185,8 +181,8 @@ public class ServerHandler extends Thread {
 
     private static String getFileExtension(File file) {
         String fileName = file.getName();
-        if(fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
-            return fileName.substring(fileName.lastIndexOf(".")+1);
+        if (fileName.lastIndexOf(".") != -1 && fileName.lastIndexOf(".") != 0)
+            return fileName.substring(fileName.lastIndexOf(".") + 1);
         else return "";
     }
 }

@@ -14,14 +14,6 @@ public class Group {
         members.add(owner);
     }
 
-    public void addMember(ClientThreadPC owner, ClientThreadPC username) {
-        if (owner.equals(this.owner)) {
-            if (!exists(username)) {
-                members.add(username);
-            }
-        }
-    }
-
     public String join(ClientThreadPC user) {
         if (!exists(user)) {
             members.add(user);
@@ -30,8 +22,8 @@ public class Group {
         return "You are already a member of this group";
     }
 
-    public String leave(ClientThreadPC user){
-        if (exists(user)){
+    public String leave(ClientThreadPC user) {
+        if (exists(user)) {
             for (int i = 0; i < members.size(); i++) {
                 if (user.getUsername().equals(members.get(i).getUsername())) {
                     members.remove(i);
@@ -42,12 +34,13 @@ public class Group {
         }
         return "You are not a member of this group.";
     }
+
     public String kickMember(ClientThreadPC owner, ClientThreadPC user) {
         if (owner.equals(this.owner)) {
             if (!user.getUsername().equals(this.owner.getUsername())) {
                 if (exists(user)) {
                     for (int i = 0; i < members.size(); i++) {
-                        if (members.get(i).getUsername().equals(user.getUsername())){
+                        if (members.get(i).getUsername().equals(user.getUsername())) {
                             members.remove(i);
                             return "Member " + user.getUsername() + " has been kicked.";
                         }

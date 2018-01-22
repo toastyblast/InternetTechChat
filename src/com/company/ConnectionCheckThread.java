@@ -8,7 +8,7 @@ public class ConnectionCheckThread implements Runnable {
     private Singleton singleton = Singleton.getInstance();
 
     public ConnectionCheckThread() {
-
+        //No constructor needed for this class.
     }
 
     /**

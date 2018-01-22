@@ -4,7 +4,6 @@ package com.company;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,12 +63,23 @@ public class ListeningThread implements Runnable {
                         String[] split = serverMessage.split(" ");
                         singleton.setFileExtension(split[3]);
                         System.out.println("The user (" + split[1] + ") wants to send you a file. Size: "
-                                + split[2] + " Extension: " + split[3] +". If you want to accept the file type /receive accept. " +
+                                + split[2] + " Extension: " + split[3] + ". If you want to accept the file type /receive accept. " +
                                 "If you want to decline, type /receive decline.");
                     } else if (serverMessage.contains("BEGIN_DNLD")) {
                         String[] splits = serverMessage.split(" ");
                         fileSize = Integer.parseInt(splits[1]);
                         receiving = true;
+                    } else if (serverMessage.contains("HELP")) {
+                        serverMessage = serverMessage.replaceAll("HELP", "");
+                        String[] splits = serverMessage.split("- ");
+
+                        //Print out the header of the response without an extra '-'
+                        System.out.println(splits[0]);
+
+                        for (int i = 1; i < splits.length; i++) {
+                            //Print out each of the points from the response command list
+                            System.out.println(" - " + splits[i]);
+                        }
                     } else {
                         //If a message from unknown type has been received this means it was corrupted.
                         //The program prints it to the user so he knows that the message was not sent.
@@ -81,7 +91,7 @@ public class ListeningThread implements Runnable {
                         }
                     }
                 }
-            } else if (receiving){
+            } else if (receiving) {
                 try {
                     createDownloadSocket();
                     String serverMessage = null;
@@ -136,12 +146,11 @@ public class ListeningThread implements Runnable {
 
         if (serverMessage.contains("WSPR")) {
             System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("WSPR", "[WHISPER]"));
-        }
-        else if (serverMessage.contains("GRPMSG")) {
+        } else if (serverMessage.contains("GRPMSG")) {
             ArrayList<String> message = new ArrayList<>(Arrays.asList(serverMessage.split(" ")));
 
             String groupName = "ERROR:INIT";
-            if (message.size()  >= 3) {
+            if (message.size() >= 3) {
                 groupName = message.get(2);
                 message.remove(2);
             }
@@ -149,8 +158,7 @@ public class ListeningThread implements Runnable {
             String completedMessage = buildMessage(message);
 
             System.out.println(dtf.format(now) + " " + completedMessage.replaceAll("GRPMSG", "[" + groupName + "]"));
-        }
-        else {
+        } else {
             System.out.println(dtf.format(now) + " " + serverMessage.replaceAll("BCST", "[GLOBAL]"));
         }
     }
@@ -186,17 +194,10 @@ public class ListeningThread implements Runnable {
         System.out.println("~-= List of the users in chat group [" + messageGroup + "] =-~" + sb.toString().replaceAll("::", " "));
     }
 
-    private void sendMessage(String message){
-        PrintWriter writer = new PrintWriter(singleton.getOutputStream());
-        writer.println(message);
-        writer.flush();
-        singleton.setLastMessage(message);
-    }
-
     private void createDownloadSocket() throws IOException {
         System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
         System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
-        SSLSocketFactory sslsocketfactory = (SSLSocketFactory )SSLSocketFactory.getDefault();
+        SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         this.newDownloadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
 
         this.outputStream = this.newDownloadSocket.getOutputStream();

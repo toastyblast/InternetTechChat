@@ -6,8 +6,6 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
 
-import static nl.saxion.internettech.ServerState.*;
-
 public class Server {
 
     private SSLServerSocket sslServerSocket;
@@ -35,7 +33,7 @@ public class Server {
             context.init(keyManagerFactory.getKeyManagers(), null, null);
 
             SSLServerSocketFactory factory = context.getServerSocketFactory();
-            sslServerSocket = (SSLServerSocket)factory.createServerSocket(1337);
+            sslServerSocket = (SSLServerSocket) factory.createServerSocket(1337);
             threads = new HashSet<>();
 
             while (true) {
@@ -49,7 +47,7 @@ public class Server {
                 System.out.println("Num clients: " + threads.size());
 
                 // Simulate lost connections if configured.
-                if(conf.doSimulateConnectionLost()){
+                if (conf.doSimulateConnectionLost()) {
                     DropClientThread dct = new DropClientThread(ct);
                     new Thread(dct).start();
                 }
@@ -88,7 +86,7 @@ public class Server {
     private class DropClientThread implements Runnable {
         ClientThreadPC ct;
 
-        DropClientThread(ClientThreadPC ct){
+        DropClientThread(ClientThreadPC ct) {
             this.ct = ct;
         }
 

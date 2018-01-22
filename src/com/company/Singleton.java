@@ -3,7 +3,6 @@ package com.company;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.net.Socket;
 
 public class Singleton {
     private static Singleton ourInstance = new Singleton();
@@ -22,6 +21,7 @@ public class Singleton {
 
     public static final String SERVER_ADDRESS = "localhost";
     public static final int SERVER_PORT = 1337;
+
     public static Singleton getInstance() {
         return ourInstance;
     }
@@ -30,14 +30,10 @@ public class Singleton {
         //Constructor is not needed.
     }
 
-    public Socket getSslSocket() {
-        return sslSocket;
-    }
-
     public void setSocket() throws IOException {
         System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
         System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
-        SSLSocketFactory sslsocketfactory = (SSLSocketFactory )SSLSocketFactory.getDefault();
+        SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         this.sslSocket = (SSLSocket) sslsocketfactory.createSocket(SERVER_ADDRESS, SERVER_PORT);
 
         try {
@@ -48,10 +44,6 @@ public class Singleton {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public InputStream getInputStream() {
-        return inputStream;
     }
 
     public BufferedReader getBufferedReader() {
@@ -102,7 +94,7 @@ public class Singleton {
         this.stateOfTheUser = stateOfTheUser;
     }
 
-    public void reconnect(){
+    public void reconnect() {
         try {
             setSocket();
             PrintWriter writer = new PrintWriter(this.outputStream);
@@ -114,7 +106,6 @@ public class Singleton {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public String getFilePath() {

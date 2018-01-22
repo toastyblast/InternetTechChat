@@ -4,9 +4,7 @@ import java.io.*;
 import java.net.SocketTimeoutException;
 
 public class ClientOpening {
-
     private Thread listen;
-    private Thread connect;
     private ServerHandler serverHandler;
     private Singleton singleton = Singleton.getInstance();
 
@@ -20,9 +18,8 @@ public class ClientOpening {
             singleton.setSocket();
             //Set up the messaging thread.
             serverHandler = new ServerHandler();
-            //Keep looping until you are actually connected to the server.
-
             boolean logged = false;
+            //Keep looping until you are actually connected to the server.
             while (!logged) {
                 try {
                     System.out.println(singleton.getBufferedReader().readLine()); // Show welcoming message.
@@ -35,7 +32,6 @@ public class ClientOpening {
                     singleton.setSocket();
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -43,11 +39,11 @@ public class ClientOpening {
         //Ask the user for username.
         String loginResponseFromServer;
         boolean validCredentials = false;
-        while (!validCredentials){
+        while (!validCredentials) {
             serverHandler.login();
             try {
                 loginResponseFromServer = singleton.getBufferedReader().readLine();
-                if (loginResponseFromServer.equals("+OK " + singleton.getUserName())){
+                if (loginResponseFromServer.equals("+OK " + singleton.getUserName())) {
                     validCredentials = true;
                     singleton.setStateOfTheUser("Logged");
                 } else {
@@ -62,23 +58,15 @@ public class ClientOpening {
 
         //Create the thread that listens for messages from the server.
         listen = new Thread(new ListeningThread());
-        //Create the thread that sends a message each 8 second in order to determine if there is connection.
-//        connect = new Thread(new ConnectionCheckThread());
-
         listen.start();
-//        connect.start();
 
         while (!singleton.getStateOfTheUser().equals("Disconnected")) {
             try {
-
                 serverHandler.sendMessage();
-
             } catch (IOException e) {
                 System.out.println("You have been disconnected.");
                 singleton.reconnect();
             }
         }
     }
-
-    //Other methods...
 }

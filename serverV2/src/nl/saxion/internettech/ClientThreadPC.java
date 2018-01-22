@@ -110,9 +110,12 @@ public class ClientThreadPC implements Runnable {
                             case DNLD:
                                 handlingDownloadResponse(message);
                                 break;
+                            case HELP:
+                                returnCommandList();
+                                break;
                         }
                     }
-                } else if (sending){
+                } else if (sending) {
                     uploadFileToServer();
                 }
             }
@@ -134,6 +137,25 @@ public class ClientThreadPC implements Runnable {
         }
 
         return desiredString;
+    }
+
+    private void returnCommandList() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(" ~+=+ Showing a list of all available commands. +=+~ ");
+        sb.append("- To send a private message: /whisper <username> <message>");
+        sb.append("- To get a list of all users in global: /users");
+        sb.append("- To get a list of all users in a specific group: /users <groupName>");
+        sb.append("- To get a list of all groups: /grp allgroups");
+        sb.append("- To create a new group: /grp create <groupName>");
+        sb.append("- To join an existing group: /grp join <groupName>");
+        sb.append("- To leave a group you're in: /grp leave <groupName>");
+        sb.append("- To send a message for members of the group only: /grp msg <groupName> <message>");
+        sb.append("- To kick a member of a group (creator of the group only-command): /grp kick <groupName> <userName>");
+        sb.append("- To send a file to someone: /send");
+        sb.append("- To leave the chat service: /quit");
+
+        writeToClient("HELP " + sb.toString());
     }
 
     private void sendUsersList(Message message) {
@@ -277,8 +299,10 @@ public class ClientThreadPC implements Runnable {
 
         writeToClient("+OK");
     }
+
     /*--- START OF FILE-TRANSFER HANDLING --------------------------------------------------------------------*/
-    private void startUploading(Message message){
+
+    private void startUploading(Message message) {
         ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
         sender = extractCertainPartOfString(commandStringGRP, 0);
         receiver = extractCertainPartOfString(commandStringGRP, 1);
@@ -286,16 +310,17 @@ public class ClientThreadPC implements Runnable {
         fileExtension = extractCertainPartOfString(commandStringGRP, 3);
         sending = true;
     }
+
     private void uploadFileToServer() throws IOException {
         DataInputStream dis = new DataInputStream(socket.getInputStream());
         byte[] buffer = new byte[16000];
 
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        int filesize = fileSize ; // Send file size in separate msg
+        int filesize = fileSize; // Send file size in separate msg
         int read = 0;
         int totalRead = 0;
         int remaining = filesize;
-        while((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+        while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
             totalRead += read;
             remaining -= read;
             System.out.println("read " + totalRead + " bytes.");
@@ -308,8 +333,8 @@ public class ClientThreadPC implements Runnable {
         dis.close();
     }
 
-    private void askUserForDownloadApproval(){
-        if (findMember(receiver)){
+    private void askUserForDownloadApproval() {
+        if (findMember(receiver)) {
             for (ClientThreadPC ct : threads) {
                 if (ct != this && ct.getUsername().equals(receiver)) {
                     ct.writeToClient("RQST " + sender + " " + fileSize + " " + fileExtension);
@@ -324,16 +349,15 @@ public class ClientThreadPC implements Runnable {
                 }
             }
         }
-
     }
 
     private void handlingDownloadResponse(Message message) throws IOException {
         ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
         String response = extractCertainPartOfString(commandStringGRP, 0);
         String receiver = extractCertainPartOfString(commandStringGRP, 1);
-        if (response.equals("ready")){
+        if (response.equals("ready")) {
             sendBytes(singleton.getFile(receiver));
-        } else if (response.equals("accept")){
+        } else if (response.equals("accept")) {
             writeToClient("BEGIN_DNLD " + singleton.getFiles().get(0).getFileSize());
         }
     }
@@ -351,7 +375,9 @@ public class ClientThreadPC implements Runnable {
         deleteThread();
         dos.close();
     }
+
     /*--- END OF FILE-TRANSFER HANDLING --------------------------------------------------------------------*/
+
     /*--- START OF GROUP-RELATED MESSAGE HANDLING --------------------------------------------------------------------*/
 
     /**
@@ -554,7 +580,7 @@ public class ClientThreadPC implements Runnable {
 
     private boolean findMember(String user) {
         for (ClientThreadPC ct : threads) {
-            if (ct.getUsername() != null){
+            if (ct.getUsername() != null) {
                 if (ct.getUsername().equals(user)) {
                     return true;
                 }
@@ -562,6 +588,7 @@ public class ClientThreadPC implements Runnable {
         }
         return false;
     }
+
     /*--- END OF GROUP-RELATED MESSAGE HANDLING ----------------------------------------------------------------------*/
 
     /**
@@ -677,7 +704,7 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
-    private void deleteThread(){
+    private void deleteThread() {
         for (ClientThreadPC ct : threads) {
             if (ct == this) {
                 threads.remove(ct);
