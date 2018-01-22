@@ -10,12 +10,7 @@ import java.util.Scanner;
 public class ServerHandler extends Thread {
     private String userName;
     private Singleton singleton = Singleton.getInstance();
-    //Data for the upload socket.
-    private SSLSocket newUploadSocket;
     private OutputStream outputStream;
-    private InputStream inputStream;
-    private BufferedReader bufferedReader;
-    //
 
     public ServerHandler() {
         //Nothing, a constructor is not needed.
@@ -41,13 +36,13 @@ public class ServerHandler extends Thread {
             singleton.getOutputStream().flush();
             quit();
         } else if (userInput.toLowerCase().startsWith("/help")) {
-            sendAnyMessage(writer, "HELP", userInput);
+            sendAnyMessage(writer, "HELP ", userInput);
         } else if (userInput.toLowerCase().startsWith("/whisper")) {
-            sendAnyMessage(writer, "WSPR", userInput);
+            sendAnyMessage(writer, "WSPR ", userInput);
         } else if (userInput.toLowerCase().startsWith("/users")) {
-            sendAnyMessage(writer, "USRS", userInput);
+            sendAnyMessage(writer, "USRS ", userInput);
         } else if (userInput.toLowerCase().startsWith("/grp")) {
-            sendAnyMessage(writer, "GRP", userInput);
+            sendAnyMessage(writer, "GRP ", userInput);
         } else if (userInput.toLowerCase().startsWith("/send")) {
             try {
                 //Get the file.
@@ -112,7 +107,7 @@ public class ServerHandler extends Thread {
 
         } else {
             //If it is a normal message, just send it.
-            sendAnyMessage(writer, "BCST", userInput);
+            sendAnyMessage(writer, "BCST ", userInput);
         }
     }
 
@@ -166,17 +161,15 @@ public class ServerHandler extends Thread {
     /**
      * Method to create a new socket connection, with which the file is going to be uploaded to the server.
      *
-     * @throws IOException
+     * @throws IOException is an exception that can happen due to the usage of getting input and output streams.
      */
     private void createUploadSocket() throws IOException {
         System.setProperty("javax.net.ssl.trustStore", "./truststore.txt");
         System.setProperty("javax.net.ssl.trustStorePassword", "storepass");
         SSLSocketFactory sslsocketfactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        this.newUploadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
+        SSLSocket newUploadSocket = (SSLSocket) sslsocketfactory.createSocket(Singleton.SERVER_ADDRESS, Singleton.SERVER_PORT);
 
-        this.outputStream = this.newUploadSocket.getOutputStream();
-        this.inputStream = this.newUploadSocket.getInputStream();
-        this.bufferedReader = new BufferedReader(new InputStreamReader(this.inputStream));
+        this.outputStream = newUploadSocket.getOutputStream();
     }
 
     private static String getFileExtension(File file) {
