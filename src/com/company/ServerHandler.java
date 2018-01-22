@@ -105,7 +105,11 @@ public class ServerHandler extends Thread {
                 }
             }
 
-        } else {
+        } else if (userInput.startsWith("/")) {
+            //In this case, all possible / commands have already been checked for, so the user typed a wrong one. We need to let them know.
+            System.out.println("-ERR: Unknown usage of the '/' commands. Type '/help' for all possible commands.");
+        }
+        else {
             //If it is a normal message, just send it.
             sendAnyMessage(writer, "BCST ", userInput);
         }
