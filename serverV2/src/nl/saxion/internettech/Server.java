@@ -6,6 +6,10 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.*;
 
+/**
+ * Class that represents the instance of the server. It keeps track of all clients connected, all the groups and also
+ * the SSLServerSocket to which clients can connect to.
+ */
 public class Server {
     private Set<ClientThreadPC> threads;
     private ServerConfiguration conf;
@@ -22,6 +26,7 @@ public class Server {
     public void run() {
         // Create a socket to wait for clients.
         try {
+            //Set up all the security needed to run an SSLServerSocket for clients to connect to.
             SSLContext context = SSLContext.getInstance("TLS");
             KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance("SunX509");
             KeyStore keyStore = KeyStore.getInstance("JKS");
@@ -31,10 +36,11 @@ public class Server {
             context.init(keyManagerFactory.getKeyManagers(), null, null);
 
             SSLServerSocketFactory factory = context.getServerSocketFactory();
-            SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(1337);
+            SSLServerSocket sslServerSocket = (SSLServerSocket) factory.createServerSocket(conf.SERVER_PORT);
             threads = new HashSet<>();
 
             while (true) {
+                //Just keep running until the end of times (or until you're stopped.)
                 // Wait for an incoming client-connection request (blocking).
                 SSLSocket socket = (SSLSocket) sslServerSocket.accept();
 

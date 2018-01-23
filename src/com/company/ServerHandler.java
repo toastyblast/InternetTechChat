@@ -7,6 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 
+/**
+ * Class that is specifically used for sending messages to the server over the socket we created and stored in the Singleton.
+ */
 public class ServerHandler extends Thread {
     private String userName;
     private Singleton singleton = Singleton.getInstance();
@@ -17,7 +20,8 @@ public class ServerHandler extends Thread {
     }
 
     /**
-     * Method for sending message to the user.
+     * Method for sending message to the user. Scans for the sort of message the user types in and prepares it
+     * accordingly, so that the server understands what to do with it.
      */
     public void sendMessage() throws IOException {
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
@@ -31,17 +35,23 @@ public class ServerHandler extends Thread {
         Scanner reader = new Scanner(System.in);
         String userInput = reader.nextLine();
 
-        //If the user types "quit", quit him out.
-        if (userInput.equalsIgnoreCase("/quit")) {
+        //Please notice that it checks on if the message starts with the command, not if the command is anywhere in it.
+        // This makes sure that the user can type the command in sentences to explain it to others, without performing said command unwillingly.
+        if (userInput.toLowerCase().startsWith("/quit")) {
+            //If the user types "quit", quit him out.
             singleton.getOutputStream().flush();
             quit();
         } else if (userInput.toLowerCase().startsWith("/help")) {
+            //The user wants a list of all available commands in the server.
             sendAnyMessage(writer, "HELP ", userInput);
         } else if (userInput.toLowerCase().startsWith("/whisper")) {
+            //The user wants to send a whisper to another user, presumably.
             sendAnyMessage(writer, "WSPR ", userInput);
         } else if (userInput.toLowerCase().startsWith("/users")) {
+            //The user wants a list of all users in a group or on global, depending on if there's an added tag.
             sendAnyMessage(writer, "USRS ", userInput);
         } else if (userInput.toLowerCase().startsWith("/grp")) {
+            //The user wants to do some sort of command regarding groups.
             sendAnyMessage(writer, "GRP ", userInput);
         } else if (userInput.toLowerCase().startsWith("/send")) {
             try {
@@ -110,13 +120,13 @@ public class ServerHandler extends Thread {
             System.out.println("-ERR: Unknown usage of the '/' commands. Type '/help' for all possible commands.");
         }
         else {
-            //If it is a normal message, just send it.
+            //If the message the user typed does not start with a '/', they just want to send a broadcast.
             sendAnyMessage(writer, "BCST ", userInput);
         }
     }
 
     /**
-     * Method for logging in.
+     * Method for logging in. Asks for a username from the user and sends that over to the server to be checked.
      */
     public void login() {
         Scanner reader = new Scanner(System.in);
@@ -124,24 +134,27 @@ public class ServerHandler extends Thread {
         System.out.println("Please enter a username: ");
         String userInput = reader.next();
         userName = userInput;
-        //Store the username for when you need to reconnect.
+        //Store the username for when you need to reconnect upon unwanted disconnection.
         singleton.setUserName(userName);
 
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
+        //Ask the server if you can login with this username.
         writer.println("HELO " + userInput);
 
         writer.flush();
     }
 
     /**
-     * Method for quiting the server.
+     * Method for letting the server know you want to disconnect and quit.
      */
     private void quit() {
         PrintWriter writer = new PrintWriter(singleton.getOutputStream());
 //        writer.println("has left the chat.");
+        //This command should trigger the server to drop the socket & connection
         writer.println("QUIT");
 
         writer.flush();
+        //Set your state to disconnected so the ClientOpening for this user can finish as well.
         singleton.setStateOfTheUser("Disconnected");
     }
 
@@ -154,11 +167,13 @@ public class ServerHandler extends Thread {
      * @throws IOException is an exception that can happen with the PrintWriter.
      */
     private void sendAnyMessage(PrintWriter writer, String type, String userInput) throws IOException {
+        //Get the type of the message and put it in the output stream along with the rest of the user's input and send it.
         singleton.getOutputStream().write(type.getBytes());
         writer.println(userInput);
         writer.flush();
 
         singleton.setMessageSent(true);
+        //Remember the message for if you notice something went wrong and have to resend it.
         singleton.setLastMessage(userInput);
     }
 

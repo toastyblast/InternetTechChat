@@ -12,6 +12,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * Class that is used as a thread to listen for messages from the server and handle them accordingly for this client.
+ */
 public class ListeningThread implements Runnable {
     private Singleton singleton = Singleton.getInstance();
     private boolean receiving = false;
@@ -28,9 +31,11 @@ public class ListeningThread implements Runnable {
     public void run() {
         while (true) {
             if (!receiving) {
+                //As long as you're not downloading stuff currently.
                 String serverMessage = null;
 
                 try {
+                    //Try to get the received message from the server.
                     serverMessage = singleton.getBufferedReader().readLine();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -51,6 +56,7 @@ public class ListeningThread implements Runnable {
                         singleton.setContinueToChat(false);
                         break;
                     } else if (serverMessage.contains("+GRP") || serverMessage.contains("-ERR")) {
+                        //These types of messages we can just display for the user to inform them.
                         System.out.println(serverMessage);
                     } else if (serverMessage.contains("HELO") || serverMessage.contains("+OK")) {
                         //Do nothing.
@@ -135,6 +141,12 @@ public class ListeningThread implements Runnable {
         }
     }
 
+    /**
+     * Method that is used to chop up the message in a certain form according to the visuals of the client.
+     * This can only be used for messages of type WSPR, GRPMSG or BCST.
+     *
+     * @param serverMessage String is the message received from the server.
+     */
     private void showReceivedUserMessage(String serverMessage) {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss"); //Get the current time.
         LocalDateTime now = LocalDateTime.now();
@@ -158,6 +170,12 @@ public class ListeningThread implements Runnable {
         }
     }
 
+    /**
+     * Method that builds up an ArrayList of Strings into an actual singular String for the client to show.
+     *
+     * @param message ArrayList<String> is the message received from the server, chopped up most likely due to .split().
+     * @return String is the list turned back into a single String with spaces.
+     */
     private String buildMessage(ArrayList<String> message) {
         StringBuilder sb = new StringBuilder();
 
@@ -169,6 +187,12 @@ public class ListeningThread implements Runnable {
         return sb.toString();
     }
 
+    /**
+     * Special method just to show the received list of users in the server in a nice manner. Can only be used to
+     * display USRS messages received from the server.
+     *
+     * @param serverMessage String is the message received from the server, in this case a USRS,<GROUP>,<Member1>,<Member2>,etc
+     */
     private void showUsersList(String serverMessage) {
         //Get an arrayList of names from the string.
         ArrayList<String> listOfUsers = new ArrayList<>(Arrays.asList(serverMessage.split(",")));
@@ -181,6 +205,7 @@ public class ListeningThread implements Runnable {
         StringBuilder sb = new StringBuilder();
 
         for (String name : listOfUsers) {
+            //Append one list item as a new list item on a new line, to create a list.
             sb.append("\n - ");
             sb.append(name);
         }

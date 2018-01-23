@@ -1,6 +1,10 @@
 package nl.saxion.internettech;
 
+/**
+ * Class that represents a message received from one of your many client connections.
+ */
 public class Message {
+    //All the types of messages possible. If the message type is not recognised, it's automatically set to UNKNOWN.
     public enum MessageType {
         HELO,
         BCST,
@@ -23,8 +27,8 @@ public class Message {
 
     /**
      * Parses the first word in the message in an attempt to get the message type.
-     * @return  Return a message type if it can be parsed correctly or UKNOWN if
-     *          the message type cannot be derived.
+     *
+     * @return  Return a message type if it can be parsed correctly or UKNOWN if the message type cannot be derived.
      */
     public MessageType getMessageType() {
         MessageType result = MessageType.UNKOWN;
@@ -42,8 +46,8 @@ public class Message {
     /**
      * Gets the payload of the message. This is interpreted as the raw message line
      * without the message type.
-     * @return  Returns the raw line minus the message type. If the message type is
-     *          unkown then raw line is returned.
+     *
+     * @return  Returns the raw line minus the message type. If the message type is unknown then raw line is returned.
      */
     public String getPayload() {
 

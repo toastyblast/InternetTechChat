@@ -8,7 +8,7 @@ import static nl.saxion.internettech.ServerState.*;
 import static nl.saxion.internettech.ServerState.FINISHED;
 
 /**
- * The public class of client thread.
+ * Class that represents one client connected to the server, to be able to get messages from and send responses back to.
  */
 public class ClientThreadPC implements Runnable {
     private OutputStream os;
@@ -66,7 +66,7 @@ public class ClientThreadPC implements Runnable {
                         // Parse incoming message.
                         Message message = new Message(line);
 
-                        // Process message.
+                        // Handle the type of message you received accordingly.
                         switch (message.getMessageType()) {
                             case HELO:
                                 handleUserLogin(message);
@@ -119,6 +119,13 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
+    /**
+     * Helper method that extracts a part of the given string (given as an ArrayList) at the given index.
+     *
+     * @param strings ArrayList<String> is the sentence split up into single words by any means.
+     * @param index int is the index of the word we want to grab from the string.
+     * @return String is the extracted word at the given index of the string.
+     */
     private String extractCertainPartOfString(ArrayList<String> strings, int index) {
         String desiredString;
 
@@ -131,6 +138,9 @@ public class ClientThreadPC implements Runnable {
         return desiredString;
     }
 
+    /**
+     * Method that is called upon the user requesting a list of all commands possible (by '/help'). Returns said list of commands.
+     */
     private void returnCommandList() {
         StringBuilder sb = new StringBuilder();
 
@@ -150,21 +160,30 @@ public class ClientThreadPC implements Runnable {
         writeToClient("HELP " + sb.toString());
     }
 
+    /**
+     * Method that is used for when the user requested a list of users globally, or by a group.
+     *
+     * @param message Message is the message we received from the user, that by the run has been checked to be a 'USRS /user' message.
+     */
     private void sendUsersList(Message message) {
+        //Split the message up into pieces.
         ArrayList<String> commandString = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
 
         StringBuilder sb = new StringBuilder();
 
         if (commandString.size() > 1) {
+            //If there's at least more than one word (aka '/users <groupName>')
             String groupToGetUsersOf = commandString.get(1);
 
             if (groupExists(groupToGetUsersOf)) {
+                //If the group exists that was located as the second word in the command.
                 sb.append("USRS,");
                 sb.append(groupToGetUsersOf);
 
                 Group group = findGroup(groupToGetUsersOf);
 
                 if (group != null) {
+                    //Get the members of the group and append them, so that they can be displayed. The owner will have an ::[OWNER] tag added and appended as the first.
                     ArrayList<ClientThreadPC> groupMembers = group.getMembers();
 
                     sb.append(",");
@@ -193,12 +212,18 @@ public class ClientThreadPC implements Runnable {
         writeToClient(sb.toString());
     }
 
+    /**
+     * Private helper method that is called by the run if the received message from the client is of type 'WSPR /whisper'.
+     *
+     * @param message Message is the user's message we received and was checked by the run.
+     */
     private void sendWhisper(Message message) {
         ArrayList<String> myList = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
 
         String userToWhisper = extractCertainPartOfString(myList, 1);
 
         if (userToWhisper.equalsIgnoreCase("e")) {
+            //If we couldn't find an extractable part of the string at index one (meaning only '/whisper' was sent.)
             writeToClient("-ERR Wrong usage of command /whisper. Should be used like: /whisper <username> <message...>");
             return;
         }
@@ -234,12 +259,18 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
+    /**
+     * Helper method that is called after the first message we should receive from our client: HELO (+ username).
+     *
+     * @param message Message is the user's message we received and was checked by the run.
+     */
     private void handleUserLogin(Message message) {
         // Check username format.
         if (state != CONNECTED) {
             boolean isValidUsername = message.getPayload().matches("[a-zA-Z0-9_]{3,14}");
 
             if (!isValidUsername) {
+                //Check if the username is of a valid format, and if not, let the user know.
                 state = FINISHED;
                 writeToClient("-ERR username has an invalid format (only characters, numbers and underscores are allowed)");
             } else {
@@ -257,13 +288,16 @@ public class ClientThreadPC implements Runnable {
                 if (userExists) {
                     writeToClient("-ERR user already logged in");
                 } else {
+                    //The username is valid and unique, so connect the user!
                     state = CONNECTED;
 
                     this.username = message.getPayload();
+                    //Let the user know they have been connected.
                     writeToClient("+OK " + getUsername());
 
                     for (ClientThreadPC ct : threads) {
                         if (ct != this) {
+                            //Let all the users that are not this new one know a new user joined!
                             ct.writeToClient("BCST - " + "SYSTEM" + ": " + this.username + " has entered the chat!");
                         }
                     }
@@ -274,6 +308,12 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
+    /**
+     * Method that can be invoked to send a broadcast of a system message, reserved for special messages that are
+     * server-side, caused by a user under special circumstances (like a kick or a leave.)
+     *
+     * @param message Message is the user's message we received and was checked by the run.
+     */
     private void broadcastSystemMessage(String message) {
         // Broadcast to other clients.
         for (ClientThreadPC ct : threads) {
@@ -281,18 +321,24 @@ public class ClientThreadPC implements Runnable {
                 ct.writeToClient("BCST - SYSTEM: " + message);
             }
         }
-
+        //Let the client know their message has been broadcasted.
         writeToClient("+OK");
     }
 
+    /**
+     * Helper method that will be called by the run if the message received is of type "BCST", meaning we have to send it to all other clients.
+     *
+     * @param message Message is the user's message we received and was checked by the run.
+     */
     private void broadcastMessage(Message message) {
         // Broadcast to other clients.
         for (ClientThreadPC ct : threads) {
             if (ct != this) {
+                //Send this message to all other clients that aren't this one.
                 ct.writeToClient("BCST - " + getUsername() + ": " + message.getPayload());
             }
         }
-
+        //Let the client know their message has been broadcasted.
         writeToClient("+OK");
     }
 
@@ -387,6 +433,7 @@ public class ClientThreadPC implements Runnable {
         String command = extractCertainPartOfString(commandStringGRP, 1);
 
         switch (command) {
+            //See which type of group command to handle and call the according helper methods.
             case "create": {
                 createGroup(commandStringGRP);
                 break;
@@ -425,6 +472,7 @@ public class ClientThreadPC implements Runnable {
         String groupName = extractCertainPartOfString(commandStringGRP, 2);
 
         if (groupName.equalsIgnoreCase("e")) {
+            //If the groupname could not be extracted, meaning the user only typed "/grp create".
             writeToClient("-ERR Wrong usage of command /grp create. Should be used like: /grp create <group-name>");
             return;
         }
@@ -448,17 +496,18 @@ public class ClientThreadPC implements Runnable {
         String groupName = extractCertainPartOfString(commandStringGRP, 2);
 
         if (groupName.equalsIgnoreCase("e")) {
+            //If the groupname could not be extracted, meaning the user only typed "/grp join".
             writeToClient("-ERR Wrong usage of command /grp join. Should be used like: /grp join <group-name>");
             return;
         }
 
         if (groupExists(groupName)) {
             Group groupToJoin = findGroup(groupName);
-            boolean wasPreviouslyAMember = groupToJoin.exists(this);
+            ClientThreadPC isAlreadyAMember = groupToJoin.exists(this);
 
             writeToClient("+GRP " + groupToJoin.join(this));
 
-            if (!wasPreviouslyAMember) {
+            if (isAlreadyAMember == null) {
                 String notifyGroupMembers = "/grp msg " + groupName + " has joined the group! Welcome them to the brotherhood!";
                 ArrayList<String> temporary = new ArrayList<>(Arrays.asList(notifyGroupMembers.split(" ")));
 
@@ -469,11 +518,17 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
+    /**
+     * ...
+     *
+     * @param commandStringGRP is a split version of the message the user typed to the server.
+     */
     private void leaveGroup(ArrayList<String> commandStringGRP) {
         String groupName = extractCertainPartOfString(commandStringGRP, 2);
 
         if (groupName.equalsIgnoreCase("e")) {
-            writeToClient("-ERR Wrong usage of command /grp join. Should be used like: /grp join <group-name>");
+            //If the groupname could not be extracted, meaning the user only typed "/grp leave".
+            writeToClient("-ERR Wrong usage of command /grp leave. Should be used like: /grp leave <group-name>");
             return;
         }
 
@@ -488,6 +543,11 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
+    /**
+     * Helper method that is called when the user send a message starting with the "GRP /grp kick" command.
+     *
+     * @param commandStringGRP is a split version of the message the user typed to the server.
+     */
     private void kickGroupMember(ArrayList<String> commandStringGRP) {
         String groupName;
         String memberToKick;
@@ -496,42 +556,57 @@ public class ClientThreadPC implements Runnable {
             groupName = commandStringGRP.get(2);
             memberToKick = commandStringGRP.get(3);
         } else {
+            //If something could not be extracted, meaning the user only typed "/grp kick" or "/grp kick <groupName>".
             writeToClient("-ERR Wrong command use, please use it like: /grp kick <group-name> <user-name>");
             return;
         }
 
         Group specifiedGroup = findGroup(groupName);
 
-        if (findGroup(groupName) != null && specifiedGroup.exists(this)) {
+        if (findGroup(groupName) != null && specifiedGroup.exists(this) != null) {
+            //Check if the specified group exists and if this client is a member of said group.
             ClientThreadPC ct = specifiedGroup.getMember(memberToKick);
 
-            writeToClient("+GRP " + specifiedGroup.kickMember(this, ct));
+            if (ct != null) {
+                //If the member we want to kick exists.
+                writeToClient("+GRP " + specifiedGroup.kickMember(this, ct));
 
-            if (this.getUsername().equals(specifiedGroup.getOwner().getUsername()) && !specifiedGroup.getOwner().getUsername().equals(memberToKick)) {
-                //If the user that's trying to kick someone isn't the owner trying to kick themselves, then notify the rest of the group. Also do not allow
-                ct.writeToClient("+GRP You have been kicked from the group " + groupName + " by the owner.");
-                String notifyGroupMembers = "/grp msg " + groupName + " (the owner) has kicked the user " + memberToKick + " from the group. Let this be a lesson for them.";
-                ArrayList<String> temporary = new ArrayList<>(Arrays.asList(notifyGroupMembers.split(" ")));
+                if (this.getUsername().equals(specifiedGroup.getOwner().getUsername()) && !specifiedGroup.getOwner().getUsername().equals(memberToKick)) {
+                    //If the user that's trying to kick someone isn't the owner trying to kick themselves, then notify the rest of the group. Also do not allow
+                    ct.writeToClient("+GRP You have been kicked from the group " + groupName + " by the owner.");
+                    String notifyGroupMembers = "/grp msg " + groupName + " (the owner) has kicked the user " + memberToKick + " from the group. Let this be a lesson for them.";
+                    ArrayList<String> temporary = new ArrayList<>(Arrays.asList(notifyGroupMembers.split(" ")));
 
-                sendGroupMessage(temporary);
+                    sendGroupMessage(temporary);
+                }
+            } else {
+                writeToClient("-ERR The member you're trying to kick is not in this group or does not exist at all.");
             }
         } else {
             writeToClient("-ERR The group that you are trying to kick members from does not exist, or you're not a member of this group.");
         }
     }
 
+    /**
+     * Helper method that is called when the user send a message starting with the "GRP /grp msg" command.
+     *
+     * @param commandStringGRP is a split version of the message the user typed to the server.
+     */
     private void sendGroupMessage(ArrayList<String> commandStringGRP) {
         String groupName = extractCertainPartOfString(commandStringGRP, 2);
 
         if (groupName.equalsIgnoreCase("e")) {
+            //If the groupname could not be extracted, meaning the user only typed "/grp msg".
             writeToClient("-ERR Wrong usage of command /grp msg. Should be used like: /grp msg <group-name> <message...>");
             return;
         }
 
         if (groupExists(groupName)) {
+            //If the group with the given name exists.
             Group group = findGroup(groupName);
 
-            if (group.exists(this)) {
+            if (group.exists(this) != null) {
+                //If this client is a member of the group.
                 List<String> messageStrings = commandStringGRP.subList(3, commandStringGRP.size());
                 StringBuilder fullMessage = new StringBuilder();
 
@@ -541,6 +616,7 @@ public class ClientThreadPC implements Runnable {
 
                 for (ClientThreadPC ct : group.getMembers()) {
                     if (ct != this) {
+                        //Send the message to all clients that are in this group and that are not this client.
                         ct.writeToClient("GRPMSG - " + groupName + " " + getUsername() + ": " + fullMessage);
                     }
                 }
@@ -554,30 +630,55 @@ public class ClientThreadPC implements Runnable {
         }
     }
 
+    /**
+     * Helper method that checks if the group with the given name exists in the server.
+     *
+     * @param groupName String is the name of the group we want to know of if it exists.
+     * @return true if the group exists, false if it does not.
+     */
     private boolean groupExists(String groupName) {
         if (groups.size() > 0) {
+            //If there are groups.
             for (Group group : groups) {
+                //Loop through all groups.
                 if (groupName.equals(group.getGroupName())) {
+                    //If this group has the same name as the given name, return true.
                     return true;
                 }
             }
         }
+
         return false;
     }
 
+    /**
+     * Helper method that can be used to retrieve a group with the given name.
+     *
+     * @param groupName String is the name of the group we want to get the instance of.
+     * @return group Group with the given name that we found. Null if we cannot find a group with that name.
+     */
     private Group findGroup(String groupName) {
         for (Group group : groups) {
             if (groupName.equals(group.getGroupName())) {
+                //If we found a group with the given name, return it.
                 return group;
             }
         }
+
         return null;
     }
 
+    /**
+     * Helper method that can be used to know if a user with the given username exists in the system.
+     *
+     * @param user String is the username of which we want to get the knowledge if it exists or not.
+     * @return boolean true if the user with the username exists, false if it does not.
+     */
     private boolean findMember(String user) {
         for (ClientThreadPC ct : threads) {
             if (ct.getUsername() != null) {
                 if (ct.getUsername().equals(user)) {
+                    //If the username of the thread equals the given username.
                     return true;
                 }
             }

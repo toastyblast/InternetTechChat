@@ -3,6 +3,9 @@ package com.company;
 import java.io.*;
 import java.net.SocketTimeoutException;
 
+/**
+ * Class that can be run to connect to the server. It sets the socket and keeps the connection of said socket in check
+ */
 public class ClientOpening {
     private ServerHandler serverHandler;
     private Singleton singleton = Singleton.getInstance();
@@ -23,6 +26,7 @@ public class ClientOpening {
                 try {
                     System.out.println(singleton.getBufferedReader().readLine()); // Show welcoming message.
                     logged = true;
+                    //If we read this, we successfully connected to the server, so we can keep that in mind.
                     singleton.setStateOfTheUser("Connected");
                 } catch (SocketTimeoutException ste) {
                     //If the server doesn't send a connection confirmation message for 10s exception will be thrown
@@ -35,17 +39,23 @@ public class ClientOpening {
             e.printStackTrace();
         }
 
-        //Ask the user for username.
+        //Ask the user for username, now that they have an established connection.
         String loginResponseFromServer;
         boolean validCredentials = false;
         while (!validCredentials) {
+            //Every time they enter a username that's already in use, request a new name again.
+            //Start the request to the server to login
             serverHandler.login();
             try {
                 loginResponseFromServer = singleton.getBufferedReader().readLine();
+
                 if (loginResponseFromServer.equals("+OK " + singleton.getUserName())) {
+                    //If the server responded that the credentials are valid, move on out of the loop.
                     validCredentials = true;
                     singleton.setStateOfTheUser("Logged");
                 } else {
+                    //TODO: This looping being an else causes the issue of the unneeded repeat question for a username!
+                    //The server said the name is already in use, so we need to have the user loop again.
                     System.out.println(loginResponseFromServer);
                 }
             } catch (IOException e) {
@@ -60,6 +70,7 @@ public class ClientOpening {
         listen.start();
 
         while (!singleton.getStateOfTheUser().equals("Disconnected")) {
+            //As long as the user's not disconnected, keep on listening for messages.
             try {
                 serverHandler.sendMessage();
             } catch (IOException e) {

@@ -1,5 +1,11 @@
 package nl.saxion.internettech;
 
+/**
+ * Method that has to be run if one wants the server to start. Change details about the server's startup by changing
+ * the ServerConfiguration class.
+ *
+ * @author of the project as a whole (excluding this class, the server directory as a whole and some other classed) Martin S. Slavov (435666) & Yoran Kerbusch (430818)
+ */
 public class Main {
 
     public static void main(String[] args) {
@@ -18,6 +24,7 @@ public class Main {
         }
 
         ServerConfiguration config = new ServerConfiguration();
+        //Loop through different possible arguments the user might've added.
         for (String arg : args) {
             if (arg.equals("--no-colors")) {
                 config.setShowColors(false);
