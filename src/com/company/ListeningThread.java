@@ -4,6 +4,7 @@ package com.company;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
+import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,7 +38,10 @@ public class ListeningThread implements Runnable {
                 try {
                     //Try to get the received message from the server.
                     serverMessage = singleton.getBufferedReader().readLine();
-                } catch (IOException e) {
+                } catch (SocketTimeoutException ignored){
+
+                }
+                catch (IOException e) {
                     e.printStackTrace();
                 }
 
@@ -63,6 +67,7 @@ public class ListeningThread implements Runnable {
                     } else if (serverMessage.contains("RQST")) {
                         String[] split = serverMessage.split(" ");
                         singleton.setFileExtension(split[3]);
+                        singleton.setUniqueNumber(Long.parseLong(split[4]));
                         System.out.println("The user (" + split[1] + ") wants to send you a file. Size: "
                                 + split[2] + " Extension: " + split[3] + ". If you want to accept the file type /receive accept. " +
                                 "If you want to decline, type /receive decline.");
@@ -93,50 +98,53 @@ public class ListeningThread implements Runnable {
                     }
                 }
             } else if (receiving) {
-                try {
-                    createDownloadSocket();
-                    String serverMessage;
-
-                    try {
-                        serverMessage = bufferedReader.readLine();
-                        System.out.println(serverMessage);
-
-                        PrintWriter writer = new PrintWriter(outputStream);
-                        outputStream.write(("DNLD ready " + singleton.getUserName()).getBytes());
-                        writer.println();
-                        writer.flush();
-
-                        DataInputStream dis;
-                        try {
-                            dis = new DataInputStream(inputStream);
-                            byte[] buffer = new byte[16000];
-
-                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                            int filesize = fileSize; // Send file size in separate msg
-                            int read;
-                            int totalRead = 0;
-                            int remaining = filesize;
-                            while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
-                                totalRead += read;
-                                remaining -= read;
-//                                System.out.println("read " + totalRead + " bytes.");
-                                stream.write(buffer, 0, read);
-                            }
-                            stream.close();
-                            dis.close();
-                            System.out.println(singleton.getFilePath());
-                            Path path = Paths.get(singleton.getFilePath());
-                            Files.write(path, stream.toByteArray());
-                            receiving = false;
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                receiving = false;
+                Thread thread = new Thread(new DownloadThread(fileSize));
+                thread.start();
+//                try {
+//                    createDownloadSocket();
+//                    String serverMessage;
+//
+//                    try {
+//                        serverMessage = bufferedReader.readLine();
+//                        System.out.println(serverMessage);
+//
+//                        PrintWriter writer = new PrintWriter(outputStream);
+//                        outputStream.write(("DNLD ready " + singleton.getUserName()).getBytes());
+//                        writer.println();
+//                        writer.flush();
+//
+//                        DataInputStream dis;
+//                        try {
+//                            dis = new DataInputStream(inputStream);
+//                            byte[] buffer = new byte[16000];
+//
+//                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//                            int filesize = fileSize; // Send file size in separate msg
+//                            int read;
+//                            int totalRead = 0;
+//                            int remaining = filesize;
+//                            while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+//                                totalRead += read;
+//                                remaining -= read;
+////                                System.out.println("read " + totalRead + " bytes.");
+//                                stream.write(buffer, 0, read);
+//                            }
+//                            stream.close();
+//                            dis.close();
+//                            System.out.println(singleton.getFilePath());
+//                            Path path = Paths.get(singleton.getFilePath());
+//                            Files.write(path, stream.toByteArray());
+//                            receiving = false;
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
             }
         }
     }

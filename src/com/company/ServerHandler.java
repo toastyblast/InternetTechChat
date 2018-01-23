@@ -81,7 +81,7 @@ public class ServerHandler extends Thread {
                     dos.write(buffer);
                 }
                 fis.close();
-                dos.close();
+//                dos.close();
             } catch (FileNotFoundException FNFE) {
                 System.out.println("The file could not be found.");
             }

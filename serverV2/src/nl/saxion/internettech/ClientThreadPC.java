@@ -23,6 +23,7 @@ public class ClientThreadPC implements Runnable {
     private int fileSize;
     private String fileExtension;
     private FileTransferSingleton singleton = FileTransferSingleton.getInstance();
+    private long uniqueNumber;
 
     private Set<ClientThreadPC> threads;
     private ServerConfiguration conf;
@@ -369,7 +370,8 @@ public class ClientThreadPC implements Runnable {
             stream.write(buffer, 0, read);
         }
         stream.close();
-        singleton.getFiles().add(new FileToTransfer(sender, receiver, stream.toByteArray(), filesize));
+        uniqueNumber = System.currentTimeMillis();
+        singleton.getFiles().add(new FileToTransfer(sender, receiver, stream.toByteArray(), filesize, uniqueNumber));
         askUserForDownloadApproval();
         deleteThread();
         dis.close();
@@ -379,7 +381,7 @@ public class ClientThreadPC implements Runnable {
         if (findMember(receiver)) {
             for (ClientThreadPC ct : threads) {
                 if (ct != this && ct.getUsername().equals(receiver)) {
-                    ct.writeToClient("RQST " + sender + " " + fileSize + " " + fileExtension);
+                    ct.writeToClient("RQST " + sender + " " + fileSize + " " + fileExtension + " " + uniqueNumber);
                     break;
                 }
             }
@@ -398,7 +400,7 @@ public class ClientThreadPC implements Runnable {
         String response = extractCertainPartOfString(commandStringGRP, 0);
         String receiver = extractCertainPartOfString(commandStringGRP, 1);
         if (response.equals("ready")) {
-            sendBytes(singleton.getFile(receiver));
+            sendBytes(singleton.getFile(Long.parseLong(receiver)));
         } else if (response.equals("accept")) {
             writeToClient("BEGIN_DNLD " + singleton.getFiles().get(0).getFileSize());
         }
@@ -414,8 +416,8 @@ public class ClientThreadPC implements Runnable {
         }
 
         fis.close();
-        deleteThread();
-        dos.close();
+//        deleteThread();
+//        dos.close();
     }
 
     /*--- END OF FILE-TRANSFER HANDLING --------------------------------------------------------------------*/

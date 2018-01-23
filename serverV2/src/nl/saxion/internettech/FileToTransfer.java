@@ -6,12 +6,14 @@ public class FileToTransfer {
     private String receiver;
     private byte[] file;
     private long fileSize;
+    private long uniqueNumber;
 
-    public FileToTransfer(String sender, String receiver, byte[] file, long fileSize){
+    public FileToTransfer(String sender, String receiver, byte[] file, long fileSize, long uniqueNumber){
         this.sender = sender;
         this.receiver = receiver;
         this.file = file;
         this.fileSize = fileSize;
+        this.uniqueNumber = uniqueNumber;
     }
 
     public String getReceiver() {
@@ -44,5 +46,9 @@ public class FileToTransfer {
 
     public void setFileSize(long fileSize) {
         this.fileSize = fileSize;
+    }
+
+    public long getUniqueNumber() {
+        return uniqueNumber;
     }
 }

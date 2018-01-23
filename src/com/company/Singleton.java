@@ -20,6 +20,7 @@ public class Singleton {
     private String stateOfTheUser;
     private String filePath;
     private String fileExtension;
+    private long uniqueNumber;
 
     //Change these two values depending on what port the server is hosted, and on what IP on the same network.
     public static final String SERVER_ADDRESS = "localhost";
@@ -138,5 +139,13 @@ public class Singleton {
 
     public void setFileExtension(String fileExtension) {
         this.fileExtension = fileExtension;
+    }
+
+    public long getUniqueNumber() {
+        return uniqueNumber;
+    }
+
+    public void setUniqueNumber(long uniqueNumber) {
+        this.uniqueNumber = uniqueNumber;
     }
 }
