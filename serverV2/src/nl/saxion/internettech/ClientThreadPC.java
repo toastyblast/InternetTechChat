@@ -18,6 +18,7 @@ public class ClientThreadPC implements Runnable {
 
     //Data for file sending.
     private boolean sending = false;
+    private boolean receiving = false;
     private String sender;
     private String receiver;
     private int fileSize;
@@ -40,6 +41,14 @@ public class ClientThreadPC implements Runnable {
 
     public String getUsername() {
         return username;
+    }
+
+    public boolean isReceivingAFile(){
+        return receiving;
+    }
+
+    public void setReceiving(boolean receiving) {
+        this.receiving = receiving;
     }
 
     public void run() {
@@ -351,7 +360,25 @@ public class ClientThreadPC implements Runnable {
         receiver = extractCertainPartOfString(commandStringGRP, 1);
         fileSize = Integer.parseInt(extractCertainPartOfString(commandStringGRP, 2));
         fileExtension = extractCertainPartOfString(commandStringGRP, 3);
-        sending = true;
+        ClientThreadPC receiverThread = getMember(receiver);
+        if (receiverThread != null){
+            if (!receiverThread.isReceivingAFile()){
+                receiverThread.setReceiving(true);
+                sending = true;
+            } else {
+                getMember(sender).writeToClient("-ERR User is busy with another file transfer." +
+                        " Please wait a moment and try again! :)");
+                deleteThread();
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    System.out.println("Socket was closed. Upload  was stopped. Reason: User is busy.");
+                }
+            }
+        } else {
+            getMember(sender).writeToClient("-ERR User does not exist.");
+        }
+
     }
 
     private void uploadFileToServer() throws IOException {
@@ -385,7 +412,8 @@ public class ClientThreadPC implements Runnable {
                     break;
                 }
             }
-        } else {
+        }
+        else {
             for (ClientThreadPC ct : threads) {
                 if (ct != this && ct.getUsername().equals(sender)) {
                     ct.writeToClient("-ERR User does not exist.");
@@ -399,7 +427,9 @@ public class ClientThreadPC implements Runnable {
         ArrayList<String> commandStringGRP = new ArrayList<>(Arrays.asList(message.getPayload().split(" ")));
         String response = extractCertainPartOfString(commandStringGRP, 0);
         String receiver = extractCertainPartOfString(commandStringGRP, 1);
+        String receiverName = extractCertainPartOfString(commandStringGRP, 2);
         if (response.equals("ready")) {
+            getMember(receiverName).setReceiving(false);
             sendBytes(singleton.getFile(Long.parseLong(receiver)));
         } else if (response.equals("accept")) {
             writeToClient("BEGIN_DNLD " + singleton.getFiles().get(0).getFileSize());
@@ -686,6 +716,18 @@ public class ClientThreadPC implements Runnable {
             }
         }
         return false;
+    }
+
+    private ClientThreadPC getMember(String user) {
+        for (ClientThreadPC ct : threads) {
+            if (ct.getUsername() != null) {
+                if (ct.getUsername().equals(user)) {
+                    //If the username of the thread equals the given username.
+                    return ct;
+                }
+            }
+        }
+        return null;
     }
 
     /*--- END OF GROUP-RELATED MESSAGE HANDLING ----------------------------------------------------------------------*/

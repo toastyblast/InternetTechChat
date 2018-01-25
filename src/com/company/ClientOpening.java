@@ -47,16 +47,18 @@ public class ClientOpening {
             //Start the request to the server to login
             serverHandler.login();
             try {
-                loginResponseFromServer = singleton.getBufferedReader().readLine();
+                while(!validCredentials) {
+                    loginResponseFromServer = singleton.getBufferedReader().readLine();
 
-                if (loginResponseFromServer.equals("+OK " + singleton.getUserName())) {
-                    //If the server responded that the credentials are valid, move on out of the loop.
-                    validCredentials = true;
-                    singleton.setStateOfTheUser("Logged");
-                } else {
-                    //TODO: This looping being an else causes the issue of the unneeded repeat question for a username!
-                    //The server said the name is already in use, so we need to have the user loop again.
-                    System.out.println(loginResponseFromServer);
+                    if (loginResponseFromServer.equals("+OK " + singleton.getUserName())) {
+                        //If the server responded that the credentials are valid, move on out of the loop.
+                        validCredentials = true;
+                        singleton.setStateOfTheUser("Logged");
+                    } else if (loginResponseFromServer.contains("-ERR")){
+                        //TODO: This looping being an else causes the issue of the unneeded repeat question for a username!
+                        //The server said the name is already in use, so we need to have the user loop again.
+                        System.out.println(loginResponseFromServer);
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();

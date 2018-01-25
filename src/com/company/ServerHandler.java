@@ -77,42 +77,51 @@ public class ServerHandler extends Thread {
 
                 byte[] buffer = new byte[16000];
 
-                while (fis.read(buffer) > 0) {
-                    dos.write(buffer);
+                try {
+                    while (fis.read(buffer) > 0) {
+                        dos.write(buffer);
+                    }
+                } catch (IOException ignored){
+
                 }
+
                 fis.close();
 //                dos.close();
             } catch (FileNotFoundException FNFE) {
                 System.out.println("The file could not be found.");
             }
         } else if (userInput.toLowerCase().startsWith("/receive")) {
-            String[] splits = userInput.split(" ");
+            if (singleton.getUniqueNumber() != 0) {
+                String[] splits = userInput.split(" ");
 
-            if (splits[1].equals("accept")) {
-                boolean validpath = false;
-                while (!validpath) {
-                    System.out.println("Please input the download destination.");
-                    Scanner newReader = new Scanner(System.in);
-                    String path = newReader.nextLine();
-                    Path realpath = Paths.get(path);
-                    File file = realpath.toFile();
-                    if (!file.getParentFile().exists()) {
-                        System.out.println("Invalid path given.");
-                    } else {
-                        if (file.exists()) {
-                            System.out.println("File already exists. (At this path there is another file.)");
+                if (splits[1].equals("accept")) {
+                    boolean validpath = false;
+                    while (!validpath) {
+                        System.out.println("Please input the download destination.");
+                        Scanner newReader = new Scanner(System.in);
+                        String path = newReader.nextLine();
+                        Path realpath = Paths.get(path);
+                        File file = realpath.toFile();
+                        if (!file.getParentFile().exists()) {
+                            System.out.println("Invalid path given.");
                         } else {
-                            if (!singleton.getFileExtension().equals(getFileExtension(file))) {
-                                System.out.println("You are trying to save the file with an extension that is not compatible.");
+                            if (file.exists()) {
+                                System.out.println("File already exists. (At this path there is another file.)");
                             } else {
-                                singleton.setFilePath(path.replace("\\", "\\\\"));
-                                writer.println("DNLD " + splits[1]);
-                                writer.flush();
-                                validpath = true;
+                                if (!singleton.getFileExtension().equals(getFileExtension(file))) {
+                                    System.out.println("You are trying to save the file with an extension that is not compatible.");
+                                } else {
+                                    singleton.setFilePath(path.replace("\\", "\\\\"));
+                                    writer.println("DNLD " + splits[1]);
+                                    writer.flush();
+                                    validpath = true;
+                                }
                             }
                         }
                     }
                 }
+            } else {
+                System.out.println("There are no files, to download :(.");
             }
 
         } else if (userInput.startsWith("/")) {

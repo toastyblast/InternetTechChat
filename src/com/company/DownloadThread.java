@@ -30,7 +30,7 @@ public class DownloadThread implements Runnable {
                         System.out.println(serverMessage);
 
                         PrintWriter writer = new PrintWriter(outputStream);
-                        outputStream.write(("DNLD ready " + singleton.getUniqueNumber()).getBytes());
+                        outputStream.write(("DNLD ready " + singleton.getUniqueNumber() + " " + singleton.getUserName()).getBytes());
                         writer.println();
                         writer.flush();
 
@@ -55,6 +55,7 @@ public class DownloadThread implements Runnable {
                             System.out.println(singleton.getFilePath());
                             Path path = Paths.get(singleton.getFilePath());
                             Files.write(path, stream.toByteArray());
+                            singleton.clearFileHistory();
                         } catch (IOException e) {
                             e.printStackTrace();
                         }

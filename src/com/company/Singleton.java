@@ -148,4 +148,10 @@ public class Singleton {
     public void setUniqueNumber(long uniqueNumber) {
         this.uniqueNumber = uniqueNumber;
     }
+
+    public void clearFileHistory(){
+        this.uniqueNumber = 0;
+        this.fileExtension = "";
+        this.filePath = "";
+    }
 }
