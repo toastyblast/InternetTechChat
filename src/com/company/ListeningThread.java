@@ -101,50 +101,7 @@ public class ListeningThread implements Runnable {
                 receiving = false;
                 Thread thread = new Thread(new DownloadThread(fileSize));
                 thread.start();
-//                try {
-//                    createDownloadSocket();
-//                    String serverMessage;
-//
-//                    try {
-//                        serverMessage = bufferedReader.readLine();
-//                        System.out.println(serverMessage);
-//
-//                        PrintWriter writer = new PrintWriter(outputStream);
-//                        outputStream.write(("DNLD ready " + singleton.getUserName()).getBytes());
-//                        writer.println();
-//                        writer.flush();
-//
-//                        DataInputStream dis;
-//                        try {
-//                            dis = new DataInputStream(inputStream);
-//                            byte[] buffer = new byte[16000];
-//
-//                            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-//                            int filesize = fileSize; // Send file size in separate msg
-//                            int read;
-//                            int totalRead = 0;
-//                            int remaining = filesize;
-//                            while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
-//                                totalRead += read;
-//                                remaining -= read;
-////                                System.out.println("read " + totalRead + " bytes.");
-//                                stream.write(buffer, 0, read);
-//                            }
-//                            stream.close();
-//                            dis.close();
-//                            System.out.println(singleton.getFilePath());
-//                            Path path = Paths.get(singleton.getFilePath());
-//                            Files.write(path, stream.toByteArray());
-//                            receiving = false;
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+
             }
         }
     }
