@@ -115,7 +115,7 @@ public class ServerHandler extends Thread {
                                         System.out.println("You are trying to save the file with an extension that is not compatible.");
                                     } else {
                                         singleton.setFilePath(path.replace("\\", "\\\\"));
-                                        writer.println("DNLD " + splits[1]);
+                                        writer.println("DNLD " + splits[1] + " " + singleton.getUniqueNumber());
                                         writer.flush();
                                         validpath = true;
                                     }

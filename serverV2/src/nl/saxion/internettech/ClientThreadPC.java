@@ -440,7 +440,8 @@ public class ClientThreadPC implements Runnable {
             getMember(receiverName).setReceiving(false);
             sendBytes(singleton.getFile(Long.parseLong(receiver)));
         } else if (response.equals("accept")) {
-            writeToClient("BEGIN_DNLD " + singleton.getFiles().get(0).getFileSize());
+            String uniqueNumber = extractCertainPartOfString(commandStringGRP, 1);
+            writeToClient("BEGIN_DNLD " + singleton.getFile(Long.parseLong(uniqueNumber)).getFileSize());
         } else if (response.equals("decline")) {
             String fileNumber = extractCertainPartOfString(commandStringGRP, 1);
             String senderName = singleton.getFile(Long.parseLong(fileNumber)).getSender();
