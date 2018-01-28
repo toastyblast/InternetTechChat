@@ -281,7 +281,7 @@ public class ClientThreadPC implements Runnable {
 
             if (!isValidUsername) {
                 //Check if the username is of a valid format, and if not, let the user know.
-                state = FINISHED;
+                state = CONNECTING;
                 writeToClient("-ERR username has an invalid format (only characters, numbers and underscores are allowed)");
             } else {
                 // Check if user already exists.
@@ -382,26 +382,34 @@ public class ClientThreadPC implements Runnable {
     }
 
     private void uploadFileToServer() throws IOException {
-        DataInputStream dis = new DataInputStream(socket.getInputStream());
-        byte[] buffer = new byte[16000];
+        DataInputStream dis = null;
+        try  {
+            dis = new DataInputStream(socket.getInputStream());
+            byte[] buffer = new byte[16000];
 
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        int filesize = fileSize; // Send file size in separate msg
-        int read;
-        int totalRead = 0;
-        int remaining = filesize;
-        while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
-            totalRead += read;
-            remaining -= read;
-            System.out.println("read " + totalRead + " bytes.");
-            stream.write(buffer, 0, read);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            int filesize = fileSize; // Send file size in separate msg
+            int read;
+            int totalRead = 0;
+            int remaining = filesize;
+            while ((read = dis.read(buffer, 0, Math.min(buffer.length, remaining))) > 0) {
+                totalRead += read;
+                remaining -= read;
+//            System.out.println("read " + totalRead + " bytes.");
+                stream.write(buffer, 0, read);
+            }
+            stream.close();
+            uniqueNumber = System.currentTimeMillis();
+            singleton.getFiles().add(new FileToTransfer(sender, receiver, stream.toByteArray(), filesize, uniqueNumber));
+            askUserForDownloadApproval();
+            dis.close();
+        } catch (OutOfMemoryError OFMR){
+            getMember(sender).writeToClient("-ERR Too big file.");
+            getMember(receiver).setReceiving(false);
+        } finally {
+            deleteThread();
+            socket.close();
         }
-        stream.close();
-        uniqueNumber = System.currentTimeMillis();
-        singleton.getFiles().add(new FileToTransfer(sender, receiver, stream.toByteArray(), filesize, uniqueNumber));
-        askUserForDownloadApproval();
-        deleteThread();
-        dis.close();
     }
 
     private void askUserForDownloadApproval() {
@@ -433,6 +441,11 @@ public class ClientThreadPC implements Runnable {
             sendBytes(singleton.getFile(Long.parseLong(receiver)));
         } else if (response.equals("accept")) {
             writeToClient("BEGIN_DNLD " + singleton.getFiles().get(0).getFileSize());
+        } else if (response.equals("decline")) {
+            String fileNumber = extractCertainPartOfString(commandStringGRP, 1);
+            String senderName = singleton.getFile(Long.parseLong(fileNumber)).getSender();
+            getMember(senderName).writeToClient("-ERR Client declined the file transfer.");
+            setReceiving(false);
         }
     }
 
@@ -445,8 +458,8 @@ public class ClientThreadPC implements Runnable {
             dos.write(buffer);
         }
 
-        fis.close();
-//        deleteThread();
+//        fis.close();
+        deleteThread();
 //        dos.close();
     }
 

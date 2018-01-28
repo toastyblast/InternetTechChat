@@ -27,13 +27,13 @@ public class DownloadThread implements Runnable {
 
                     try {
                         serverMessage = bufferedReader.readLine();
-                        System.out.println(serverMessage);
+//                        System.out.println(serverMessage);
 
                         PrintWriter writer = new PrintWriter(outputStream);
                         outputStream.write(("DNLD ready " + singleton.getUniqueNumber() + " " + singleton.getUserName()).getBytes());
                         writer.println();
                         writer.flush();
-
+                        System.out.println("Download started.");
                         DataInputStream dis;
                         try {
                             dis = new DataInputStream(inputStream);
@@ -52,7 +52,7 @@ public class DownloadThread implements Runnable {
                             }
                             stream.close();
                             dis.close();
-                            System.out.println(singleton.getFilePath());
+                            System.out.println("Download complete: Downloaded " + totalRead + " bytes out of: " + filesize);
                             Path path = Paths.get(singleton.getFilePath());
                             Files.write(path, stream.toByteArray());
                             singleton.clearFileHistory();

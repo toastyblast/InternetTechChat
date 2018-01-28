@@ -14,7 +14,7 @@ public class Singleton {
     private OutputStream outputStream;
     private BufferedReader bufferedReader;
     private boolean continueToChat = true;
-    private String userName;
+    private String userName = "";
     private String lastMessage;
     private boolean messageSent;
     private String stateOfTheUser;
