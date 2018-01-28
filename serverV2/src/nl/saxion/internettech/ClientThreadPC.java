@@ -377,6 +377,12 @@ public class ClientThreadPC implements Runnable {
             }
         } else {
             getMember(sender).writeToClient("-ERR User does not exist.");
+            try {
+                deleteThread();
+                socket.close();
+            } catch (IOException e) {
+                System.out.println("Don't send all the bytes.");
+            }
         }
 
     }
